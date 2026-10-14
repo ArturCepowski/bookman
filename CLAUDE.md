@@ -56,6 +56,32 @@ Notes:
   actions, but must never be the only place where a permission is checked.
 - Secrets (API keys, passwords, tokens) never go into the repository. Use environment variables.
 
+## Development setup
+
+### Database (PostgreSQL 16)
+
+**Local development:**
+1. Ensure Docker and Docker Compose are installed
+2. Start PostgreSQL: `docker-compose up -d`
+3. Verify health: `docker-compose ps` (postgres status should be healthy after ~10s)
+4. Stop: `docker-compose down` (data persists in `postgres_data` volume)
+
+**Backend connection (development):**
+- Connection string: `jdbc:postgresql://localhost:5432/bookman`
+- User: `bookman`
+- Password: `bookman_dev_password`
+- Set in `backend/.env` or `application-dev.properties`
+
+**Production:**
+- AWS RDS PostgreSQL 16 (db.t4g.micro)
+- Endpoint: set via environment variable (e.g., `DATABASE_URL`)
+- See Q-06 in `docs/questions.md` for details
+
+**Migrations:**
+- Flyway runs automatically on backend startup
+- Migrations in `backend/src/main/resources/db/migration/`
+- Naming: `V001__initial_schema.sql`, `V002__add_xyz.sql`, etc.
+
 ## Git
 - Commit messages in English, Conventional Commits, with REQ IDs: `feat(REQ-04): reservation list screen`.
 - One stage of `docs/plan.md` = one branch = one pull request.

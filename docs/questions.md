@@ -117,11 +117,29 @@
 - Reject on registration if a normalized email already exists (case-insensitive comparison).
 - Phone validation: strict E.164 format (e.g., `+48600100200`), reject if invalid on registration.
 
+### Q-06 (Infrastructure): Database hosting
+**Status:** RESOLVED
+
+**Answer:**
+- **Development:** PostgreSQL 16 in Docker Compose (`docker-compose.yml` in repo root).
+  - Start: `docker-compose up -d`
+  - Connection: `localhost:5432`, user `bookman`, password `bookman_dev_password`, DB `bookman`
+  - Backend `.env` points to this during development
+  - Data persisted in `postgres_data` volume; `docker-compose down` preserves it
+- **Production:** AWS RDS PostgreSQL 16
+  - Instance class: `db.t4g.micro` (smallest, sufficient for v1)
+  - Multi-AZ: false (can enable later)
+  - Backup retention: 7 days (default)
+  - Publicly accessible: false (access only from VPC/security group)
+  - VPC: same VPC as backend (Spring Boot app will run on EC2 or ECS in same VPC)
+  - Connection via endpoint: e.g., `bookman-postgres.c9akciq32.eu-west-1.rds.amazonaws.com:5432`
+  - Backend production `.env` reads from environment variable `DATABASE_URL` (or similar)
+- Flyway migrations run on backend startup (Spring Boot + Flyway auto-config).
+
 ## External/Product decisions (not blocking implementation)
 
 These answers are assumed in the spec but require external decision:
 
 - **Q-05 SMS provider:** Which provider (e.g., SMSAPI.pl, Twilio) and who pays for SMS?
-- **Q-06 Hosting:** Where will the backend run?
 - **Q-07 Invitations by e-mail:** Should invitations trigger email notifications, or is in-app enough?
 - **Q-01 Booking.com integration:** Is iCal information (dates only, no guest data) sufficient for v1?
