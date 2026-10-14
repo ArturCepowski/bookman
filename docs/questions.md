@@ -26,51 +26,96 @@
 - Treat `CANCELLED` as past (do not send reminders for them)
 
 ### Q-08 (Implementation): iCal parsing library
-**Status:** TBD
+**Status:** RESOLVED
 
-- Which library should be used for iCal parsing? (e.g., `ical4j` for JVM)
-- Should we validate iCal format strictly or be lenient with common variations?
+**Answer:**
+- Use **ical4j** in `/backend` only (the Android app never parses iCal).
+- Parse **leniently**: enable `ical4j.parsing.relaxed`, `ical4j.unfolding.relaxed`
+  and `ical4j.validation.relaxed` (Booking.com feeds may not be fully RFC 5545 compliant,
+  e.g. missing DTSTAMP). Do not run strict validation on imported calendars.
+- Be strict only about fields we use: an event without UID, DTSTART or DTEND is skipped
+  and logged as a warning; it must not fail the whole import.
+- Fail-safe import: if the download fails (non-2xx, timeout, non-iCal content) or the
+  calendar cannot be parsed at all, abort the import with NO changes to the database.
+  Reservations are marked CANCELLED (REQ-06) only after a fully successful import.
+- Add a real, anonymized Booking.com iCal export as a test fixture in
+  `backend/src/test/resources/ical/` and base parser tests on it.
 
 ### Q-09 (Implementation): Database schema – user-apartment relationships
-**Status:** TBD
+**Status:** RESOLVED
 
-- How to handle the many-to-many relationship between users and apartments (roles)?
-- Should roles be stored in separate table or on apartment row (assumes separate table for scalability)?
+**Answer:**
+- Roles live ONLY in a join table `apartment_member(apartment_id, user_id, role, created_at)`,
+  PK `(apartment_id, user_id)` = one role per user per apartment. No role/admin columns on `apartment`.
+- `role` is `VARCHAR` + `CHECK (role IN ('ADMIN','CLEANING_SERVICE'))`, mapped with
+  `@Enumerated(EnumType.STRING)`. Do not use PostgreSQL ENUM types.
+- Index on `apartment_member(user_id)` for the "my apartments" query (REQ-03).
+- Exactly one admin per apartment enforced in the DB:
+  `CREATE UNIQUE INDEX ... ON apartment_member(apartment_id) WHERE role = 'ADMIN'`.
+  The admin row is never deleted except when the apartment is deleted.
+- `ON DELETE CASCADE` from `apartment` to `apartment_member`, `invitation`, `reservation` (REQ-05).
+- E-mails unique case-insensitively: `CREATE UNIQUE INDEX ... ON app_user(lower(email))`.
+- Invitations are a separate table `invitation` (apartment_id, email, role, status, invited_by,
+  expires_at), status in PENDING/ACCEPTED/DECLINED/CANCELLED/EXPIRED, at most one PENDING
+  invitation per (apartment, lower(email)) via partial unique index. Accepting = one transaction:
+  update invitation + insert apartment_member.
+- Authorization: every apartment-scoped endpoint looks up `apartment_member` by
+  `(apartment_id, current_user_id)`; no row → HTTP 403.
 
 ### Q-10 (Implementation): SMS retry strategy
-**Status:** TBD
+**Status:** RESOLVED
 
-- REQ-13 says "failed sends are retried at most 3 times" – should retries be:
-  - Immediate/synchronous in the same job?
-  - Deferred with exponential backoff using a queue/task scheduler?
-  - Recommended: exponential backoff with jitter to avoid thundering herd
+**Answer:**
+- Retries are **deferred with exponential backoff** (2s, 4s, 8s) to avoid blocking the scheduler.
+- Use Spring's `@Scheduled` + `@Async` with a `TaskExecutor` thread pool for retries.
+- On send failure, schedule a retry task with delay using `ScheduledExecutorService.schedule()`.
+- After 3 failed attempts, log error and skip (do not retry further); notify via logs.
+- Track retry count in `SmsLog` table: `retry_count` column, incremented on each attempt.
 
 ### Q-11 (Implementation): Idempotency of SMS sending (REQ-11/12)
-**Status:** TBD
+**Status:** RESOLVED
 
-- "one SMS per recipient per reservation per day" – how to ensure idempotency?
-  - Recommended: track (apartment_id, reservation_id, recipient_id, date, reminder_type) tuple
-  - Only send if this tuple has not been processed in the current day
+**Answer:**
+- Track idempotency with table `sms_sent_log(apartment_id, reservation_id, recipient_id, reminder_type, sent_date, created_at)`,
+  PK = `(apartment_id, reservation_id, recipient_id, reminder_type, sent_date)`.
+- Before sending an SMS for a reminder, check if this tuple exists in today's log.
+- If found, skip send (already sent today). If not found, send and insert one log row.
+- Query pattern: `SELECT COUNT(*) FROM sms_sent_log WHERE apartment_id=? AND reservation_id=? 
+  AND recipient_id=? AND reminder_type=? AND sent_date=CURRENT_DATE`.
+- This prevents duplicates on retry, restart, or concurrent scheduler runs.
 
 ### Q-12 (REQ-04): Validation of iCal URL
-**Status:** TBD
+**Status:** RESOLVED
 
-- Should we validate the URL format (HTTP/HTTPS, valid domain)?
-- Should we attempt to fetch and parse it during registration (REQ-04) to catch errors early?
-- Recommended: fetch + parse on registration to provide immediate feedback
+**Answer:**
+- Validate URL format on registration: must be HTTP/HTTPS, valid hostname/path.
+- **Fetch and parse on registration** (REQ-04): do a test download and parse to catch errors early.
+- If download/parse fails, return HTTP 400 with detailed error message to the app.
+- If successful, store the URL and trigger first import immediately (REQ-06).
+- Re-validate on each periodic import; malformed/unreachable URLs are logged but do not
+  stop the app (will retry in next cycle).
 
 ### Q-13 (Implementation): Concurrent iCal imports (REQ-06)
-**Status:** TBD
+**Status:** RESOLVED
 
-- Can imports for multiple apartments run in parallel, or should they be sequential?
-- Recommended: parallel with a thread pool to avoid bottlenecks
+**Answer:**
+- Imports for multiple apartments run **in parallel** with a fixed thread pool (size = number of CPUs / 2, min 2).
+- Use `ExecutorService` (e.g., `Executors.newFixedThreadPool()`) or Spring's `@Async` with custom `TaskExecutor`.
+- Prevent duplicate concurrent imports of the same apartment:
+  - Distributed lock per apartment_id (use PostgreSQL `SELECT ... FOR UPDATE` or a dedicated lock table).
+  - If a lock is held, skip the import for that apartment this cycle (retry next cycle).
+- Timeout per import: 30 seconds (configurable). If exceeded, log error and skip.
 
 ### Q-14 (REQ-01): Email validation and uniqueness
-**Status:** TBD
+**Status:** RESOLVED
 
-- Email validation: strict RFC 5321 or practical (good enough)?
-- Uniqueness: case-insensitive (as stated), but how to handle edge cases (trailing spaces)?
-- Recommended: trim and lowercase before storing and comparing
+**Answer:**
+- Email validation: practical (not strict RFC 5321). Use Spring's `@Email` validator or similar.
+- Normalize on storage: **trim and lowercase** before storing and comparing.
+  - In code: `email = email.trim().toLowerCase()` before every DB operation.
+  - In DB: `CREATE UNIQUE INDEX ... ON app_user(lower(email))` for case-insensitive uniqueness.
+- Reject on registration if a normalized email already exists (case-insensitive comparison).
+- Phone validation: strict E.164 format (e.g., `+48600100200`), reject if invalid on registration.
 
 ## External/Product decisions (not blocking implementation)
 
