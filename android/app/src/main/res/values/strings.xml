@@ -4,7 +4,6 @@
 
     <string name="title_login">Log in</string>
     <string name="title_register">Create account</string>
-    <string name="title_home">Bookman</string>
 
     <string name="label_email">E-mail</string>
     <string name="label_password">Password</string>
@@ -17,8 +16,6 @@
     <string name="action_go_to_register">No account yet? Create one</string>
     <string name="action_logout">Log out</string>
 
-    <string name="home_logged_in_as">Logged in as %1$s</string>
-
     <string name="field_error_email">Enter a valid e-mail address</string>
     <string name="field_error_password">Password must have at least 8 characters</string>
     <string name="field_error_phone">Enter the number with country code, e.g. +48600100200</string>
@@ -30,4 +27,42 @@
     <string name="error_invalid_credentials">Wrong e-mail or password</string>
     <string name="error_session_expired">Your session has expired. Please log in again.</string>
     <string name="error_unknown">Something went wrong. Please try again.</string>
+    <string name="title_apartments">My apartments</string>
+    <string name="title_apartment">Apartment</string>
+    <string name="title_apartment_form">Apartment details</string>
+    <string name="title_profile">Profile</string>
+
+    <string name="label_apartment_name">Apartment name</string>
+    <string name="label_booking_url">Booking.com listing link</string>
+    <string name="label_ical_url">Booking.com calendar export (iCal) link</string>
+    <string name="label_time_zone">Time zone</string>
+    <string name="label_language">Language</string>
+    <string name="language_english" translatable="false">English</string>
+    <string name="language_polish" translatable="false">Polski</string>
+    <string name="hint_booking_url">e.g. https://www.booking.com/hotel/pl/…</string>
+    <string name="hint_ical_url">Extranet → Calendar → Sync calendars → Export</string>
+
+    <string name="role_admin">Admin</string>
+    <string name="role_cleaning_service">Cleaning service</string>
+
+    <string name="apartments_empty">You have no apartments yet. Register your first apartment with the button below.</string>
+
+    <string name="action_register_apartment">Register apartment</string>
+    <string name="action_save">Save</string>
+    <string name="action_edit">Edit</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_cancel">Cancel</string>
+
+    <string name="delete_apartment_title">Delete apartment?</string>
+    <string name="delete_apartment_message">Its reservations, roles and invitations will be removed. This cannot be undone.</string>
+    <string name="profile_saved">Profile saved</string>
+
+    <string name="field_error_apartment_name">Name must have 1–60 characters</string>
+    <string name="field_error_booking_url">Paste the https link to your property on booking.com</string>
+    <string name="field_error_ical_url">Paste the https calendar export link from Booking.com</string>
+    <string name="field_error_time_zone">Choose a time zone from the list</string>
+
+    <string name="error_forbidden">You do not have permission for this action</string>
+    <string name="error_ical_unreachable">The calendar link cannot be opened. Check that you copied the whole export link.</string>
+    <string name="error_ical_not_a_calendar">This link does not return a Booking.com calendar. Use the iCal export link.</string>
 </resources>

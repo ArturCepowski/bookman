@@ -155,6 +155,30 @@ Questions: is 30 days acceptable? Is server-side logout/revocation needed in v1?
 Release builds use `https://bookman.invalid/` as a placeholder base URL until the AWS hosting has a
 domain + TLS certificate. Build with `-PbookmanApiUrl=https://<real-host>/`. Which domain will the API use?
 
+### Q-17 (REQ-04, NFR-03): Which calendar/listing URLs are accepted
+**Status:** OPEN – implemented with an assumption, please confirm
+
+The backend downloads the iCal URL entered by the user. Without restrictions this allows SSRF – e.g. making
+the server on AWS fetch `http://169.254.169.254/` (instance metadata with credentials).
+Assumption in code (`ASSUMPTION(REQ-04)`): both the listing link and the iCal link must be **https** URLs on
+`booking.com` or its subdomains (e.g. `ical.booking.com`), default port, no redirects followed.
+The host list is configurable (`bookman.apartment.allowed-hosts`) so other channels can be added later.
+Question: are there Booking.com export links on other domains that must be accepted?
+
+### Q-18 (REQ-06, Q-08): Real iCal fixture
+**Status:** OPEN – needs input from the owner
+
+Q-08 asks for a real, anonymized Booking.com iCal export as a test fixture. I do not have one, so
+`backend/src/test/resources/ical/booking-sample.ics` is a **synthetic** feed in the documented Booking.com
+format. Please provide a real export (replace the token in the URL and any notes) before Stage 3, which parses
+reservations from it.
+
+### Q-19 (REQ-02, REQ-14): Language change takes effect where?
+**Status:** INFO
+
+In Stage 2 the language chosen in the profile is saved on the backend (used for SMS, REQ-14). Switching the
+app UI language immediately is part of Stage 6 (REQ-14); until then the UI follows the system language.
+
 ## External/Product decisions (not blocking implementation)
 
 These answers are assumed in the spec but require external decision:

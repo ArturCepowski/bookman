@@ -1,5 +1,7 @@
 package com.bookman.app.ui.auth;
 
+import com.bookman.app.ui.common.FieldError;
+
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -55,7 +57,7 @@ public class RegisterFragment extends Fragment {
         });
         viewModel.registered().observe(getViewLifecycleOwner(), event -> {
             if (event.consume() != null) {
-                NavHostFragment.findNavController(this).navigate(R.id.action_register_to_home);
+                NavHostFragment.findNavController(this).navigate(R.id.action_register_to_apartments);
             }
         });
     }

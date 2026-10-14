@@ -20,6 +20,14 @@ public class UserService {
         return UserResponse.from(load(userId));
     }
 
+    @Transactional
+    public UserResponse updateProfile(long userId, UpdateProfileRequest request) {
+        User user = load(userId);
+        user.setPhoneNumber(request.phoneNumber());
+        user.setLanguage(request.language());
+        return UserResponse.from(user);
+    }
+
     User load(long userId) {
         // A valid token for a user that no longer exists is treated as an expired session.
         return userRepository.findById(userId)

@@ -29,6 +29,12 @@ public final class ApiErrors {
                 return AppError.INVALID_CREDENTIALS;
             case "UNAUTHORIZED":
                 return AppError.SESSION_EXPIRED;
+            case "FORBIDDEN":
+                return AppError.FORBIDDEN;
+            case "ICAL_UNREACHABLE":
+                return AppError.ICAL_UNREACHABLE;
+            case "ICAL_NOT_A_CALENDAR":
+                return AppError.ICAL_NOT_A_CALENDAR;
             default:
                 return AppError.UNKNOWN;
         }

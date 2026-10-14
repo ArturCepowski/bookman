@@ -2,17 +2,15 @@ package com.bookman.app.data.auth;
 
 import androidx.core.util.Consumer;
 import com.bookman.app.common.Result;
-import com.bookman.app.data.api.ApiErrors;
+import com.bookman.app.data.api.ApiCalls;
 import com.bookman.app.data.api.AuthApi;
 import com.bookman.app.data.api.AuthResponseDto;
 import com.bookman.app.data.api.LoginRequestDto;
 import com.bookman.app.data.api.RegisterRequestDto;
 import com.bookman.app.data.api.UserDto;
 import com.bookman.app.data.session.SessionStore;
-import java.io.IOException;
 import java.util.concurrent.Executor;
 import retrofit2.Call;
-import retrofit2.Response;
 
 /** Runs blocking Retrofit calls on {@code io}; callbacks are invoked on that executor. */
 public class AuthRepositoryImpl implements AuthRepository {
@@ -44,16 +42,6 @@ public class AuthRepositoryImpl implements AuthRepository {
     }
 
     @Override
-    public void loadCurrentUser(Consumer<Result<User>> callback) {
-        io.execute(() -> {
-            Result<UserDto> result = execute(api.me());
-            callback.accept(result.isSuccess()
-                    ? Result.success(toUser(result.value()))
-                    : Result.failure(result.error()));
-        });
-    }
-
-    @Override
     public void logout() {
         // ASSUMPTION(REQ-01): logout is client-side (JWT is stateless); the token simply expires on the server.
         sessionStore.clear();
@@ -61,7 +49,7 @@ public class AuthRepositoryImpl implements AuthRepository {
 
     private void authenticate(Call<AuthResponseDto> call, Consumer<Result<User>> callback) {
         io.execute(() -> {
-            Result<AuthResponseDto> result = execute(call);
+            Result<AuthResponseDto> result = ApiCalls.execute(call);
             if (!result.isSuccess()) {
                 callback.accept(Result.failure(result.error()));
                 return;
@@ -71,19 +59,7 @@ public class AuthRepositoryImpl implements AuthRepository {
         });
     }
 
-    private static <T> Result<T> execute(Call<T> call) {
-        try {
-            Response<T> response = call.execute();
-            if (response.isSuccessful() && response.body() != null) {
-                return Result.success(response.body());
-            }
-            return Result.failure(ApiErrors.from(response));
-        } catch (IOException e) {
-            return Result.failure(ApiErrors.from(e));
-        }
-    }
-
-    private static User toUser(UserDto dto) {
+    static User toUser(UserDto dto) {
         return new User(dto.id, dto.email, dto.phoneNumber, dto.language);
     }
 }

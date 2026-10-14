@@ -1,5 +1,7 @@
 package com.bookman.app.ui.auth;
 
+import com.bookman.app.ui.common.FieldError;
+
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
@@ -42,7 +44,7 @@ public class LoginViewModel extends ViewModel {
         String normalizedEmail = RegistrationForm.normalizeEmail(email);
         String pass = password == null ? "" : password;
         FieldError emailError = normalizedEmail.isEmpty() ? FieldError.EMAIL_INVALID : null;
-        FieldError passwordError = pass.isEmpty() ? FieldError.PASSWORD_TOO_SHORT : null;
+        FieldError passwordError = pass.isEmpty() ? FieldError.REQUIRED : null;
         if (emailError != null || passwordError != null) {
             state.setValue(new AuthFormState(false, emailError, passwordError, null));
             return;
