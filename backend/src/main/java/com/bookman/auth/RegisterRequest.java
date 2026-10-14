@@ -1,0 +1,18 @@
+package com.bookman.auth;
+
+import com.bookman.user.Language;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
+
+public record RegisterRequest(
+        @NotBlank @Email @Size(max = 254) String email,
+        // ASSUMPTION(REQ-01): password 8-72 chars (72 = bcrypt input limit); spec defines no policy, see Q-15.
+        @NotBlank @Size(min = 8, max = 72) String password,
+        @NotBlank @Pattern(regexp = PhoneNumbers.E164, message = "must be in E.164 format, e.g. +48600100200")
+        String phoneNumber,
+        // REQ-14: the app sends its current (system-derived) language so SMS texts match from day one.
+        @NotNull Language language) {
+}

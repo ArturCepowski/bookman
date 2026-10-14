@@ -1,0 +1,60 @@
+package com.bookman.app.ui.auth;
+
+import androidx.lifecycle.LiveData;
+import androidx.lifecycle.MutableLiveData;
+import androidx.lifecycle.ViewModel;
+import com.bookman.app.common.AppError;
+import com.bookman.app.common.Event;
+import com.bookman.app.data.auth.AuthRepository;
+import dagger.hilt.android.lifecycle.HiltViewModel;
+import javax.inject.Inject;
+
+@HiltViewModel
+public class LoginViewModel extends ViewModel {
+
+    private final AuthRepository repository;
+    private final MutableLiveData<AuthFormState> state = new MutableLiveData<>(AuthFormState.idle());
+    private final MutableLiveData<Event<AppError>> errors = new MutableLiveData<>();
+    private final MutableLiveData<Event<Boolean>> loggedIn = new MutableLiveData<>();
+
+    @Inject
+    public LoginViewModel(AuthRepository repository) {
+        this.repository = repository;
+    }
+
+    public LiveData<AuthFormState> state() {
+        return state;
+    }
+
+    public LiveData<Event<AppError>> errors() {
+        return errors;
+    }
+
+    public LiveData<Event<Boolean>> loggedIn() {
+        return loggedIn;
+    }
+
+    public void login(String email, String password) {
+        AuthFormState current = state.getValue();
+        if (current != null && current.loading) {
+            return;
+        }
+        String normalizedEmail = RegistrationForm.normalizeEmail(email);
+        String pass = password == null ? "" : password;
+        FieldError emailError = normalizedEmail.isEmpty() ? FieldError.EMAIL_INVALID : null;
+        FieldError passwordError = pass.isEmpty() ? FieldError.PASSWORD_TOO_SHORT : null;
+        if (emailError != null || passwordError != null) {
+            state.setValue(new AuthFormState(false, emailError, passwordError, null));
+            return;
+        }
+        state.setValue(AuthFormState.loading());
+        repository.login(normalizedEmail, pass, result -> {
+            state.postValue(AuthFormState.idle());
+            if (result.isSuccess()) {
+                loggedIn.postValue(new Event<>(true));
+            } else {
+                errors.postValue(new Event<>(result.error()));
+            }
+        });
+    }
+}

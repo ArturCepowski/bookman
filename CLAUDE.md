@@ -66,11 +66,14 @@ Notes:
 3. Verify health: `docker-compose ps` (postgres status should be healthy after ~10s)
 4. Stop: `docker-compose down` (data persists in `postgres_data` volume)
 
-**Backend connection (development):**
-- Connection string: `jdbc:postgresql://localhost:5432/bookman`
-- User: `bookman`
-- Password: `bookman_dev_password`
-- Set in `backend/.env` or `application-dev.properties`
+**Backend configuration (environment variables):**
+- `DATABASE_URL` / `DATABASE_USER` / `DATABASE_PASSWORD` – default to the docker-compose dev database
+  (`jdbc:postgresql://localhost:5432/bookman`, `bookman` / `bookman_dev_password`)
+- `BOOKMAN_JWT_SECRET` – **required**, at least 32 bytes, e.g. `export BOOKMAN_JWT_SECRET=$(openssl rand -base64 48)`
+- `BOOKMAN_JWT_TTL` – session length, default `30d`
+- Run locally: `cd backend && ./gradlew bootRun`
+
+**Backend tests** use embedded PostgreSQL 16 binaries (zonky) – no Docker or running database needed.
 
 **Production:**
 - AWS RDS PostgreSQL 16 (db.t4g.micro)
@@ -80,7 +83,7 @@ Notes:
 **Migrations:**
 - Flyway runs automatically on backend startup
 - Migrations in `backend/src/main/resources/db/migration/`
-- Naming: `V001__initial_schema.sql`, `V002__add_xyz.sql`, etc.
+- Naming: `V1__users.sql`, `V2__apartments.sql`, etc.
 
 ## Git
 - Commit messages in English, Conventional Commits, with REQ IDs: `feat(REQ-04): reservation list screen`.
