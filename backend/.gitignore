@@ -2,3 +2,6 @@
 build/
 *.iml
 .idea/
+
+# Local configuration with secrets (see .env.example)
+.env
