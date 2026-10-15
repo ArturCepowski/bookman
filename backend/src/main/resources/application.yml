@@ -20,5 +20,5 @@ bookman:
   jwt:
     # No default on purpose: startup fails unless BOOKMAN_JWT_SECRET (>= 32 bytes) is set.
     secret: ${BOOKMAN_JWT_SECRET:}
-    # ASSUMPTION(REQ-01): a login session lasts 30 days; spec does not define expiry, see Q-15.
+    # REQ-01 / Q-15 (confirmed): a login session lasts 30 days.
     ttl: ${BOOKMAN_JWT_TTL:30d}

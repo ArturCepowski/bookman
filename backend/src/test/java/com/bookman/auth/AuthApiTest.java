@@ -11,30 +11,20 @@ import com.bookman.security.JwtService;
 import com.bookman.support.IntegrationTest;
 import com.bookman.user.UserRepository;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.Map;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
 class AuthApiTest extends IntegrationTest {
 
-    @Autowired MockMvc mvc;
-    @Autowired ObjectMapper json;
     @Autowired UserRepository users;
     @Autowired JwtProperties jwtProperties;
-
-    @BeforeEach
-    void clean() {
-        users.deleteAll();
-    }
 
     @Test
     void REQ01_registerReturnsTokenAndStoresUser() throws Exception {

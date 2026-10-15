@@ -1,9 +1,15 @@
 package com.bookman.app.di;
 
 import android.content.Context;
+import com.bookman.app.data.api.ApartmentApi;
 import com.bookman.app.data.api.AuthApi;
+import com.bookman.app.data.api.UserApi;
+import com.bookman.app.data.apartment.ApartmentRepository;
+import com.bookman.app.data.apartment.ApartmentRepositoryImpl;
 import com.bookman.app.data.auth.AuthRepository;
 import com.bookman.app.data.auth.AuthRepositoryImpl;
+import com.bookman.app.data.profile.ProfileRepository;
+import com.bookman.app.data.profile.ProfileRepositoryImpl;
 import com.bookman.app.data.session.SessionStore;
 import com.bookman.app.data.session.SharedPrefsSessionStore;
 import dagger.Module;
@@ -38,5 +44,17 @@ public final class DataModule {
     @Singleton
     static AuthRepository authRepository(AuthApi api, SessionStore sessionStore, Executor io) {
         return new AuthRepositoryImpl(api, sessionStore, io);
+    }
+
+    @Provides
+    @Singleton
+    static ProfileRepository profileRepository(UserApi api, Executor io) {
+        return new ProfileRepositoryImpl(api, io);
+    }
+
+    @Provides
+    @Singleton
+    static ApartmentRepository apartmentRepository(ApartmentApi api, Executor io) {
+        return new ApartmentRepositoryImpl(api, io);
     }
 }

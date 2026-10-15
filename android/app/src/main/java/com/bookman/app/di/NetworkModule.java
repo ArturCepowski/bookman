@@ -1,8 +1,10 @@
 package com.bookman.app.di;
 
 import com.bookman.app.BuildConfig;
+import com.bookman.app.data.api.ApartmentApi;
 import com.bookman.app.data.api.AuthApi;
 import com.bookman.app.data.api.AuthInterceptor;
+import com.bookman.app.data.api.UserApi;
 import com.bookman.app.data.session.SessionStore;
 import dagger.Module;
 import dagger.Provides;
@@ -51,5 +53,17 @@ public final class NetworkModule {
     @Singleton
     static AuthApi authApi(Retrofit retrofit) {
         return retrofit.create(AuthApi.class);
+    }
+
+    @Provides
+    @Singleton
+    static UserApi userApi(Retrofit retrofit) {
+        return retrofit.create(UserApi.class);
+    }
+
+    @Provides
+    @Singleton
+    static ApartmentApi apartmentApi(Retrofit retrofit) {
+        return retrofit.create(ApartmentApi.class);
     }
 }

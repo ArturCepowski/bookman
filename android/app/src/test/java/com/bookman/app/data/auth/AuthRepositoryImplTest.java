@@ -83,18 +83,6 @@ public class AuthRepositoryImplTest {
     }
 
     @Test
-    public void REQ01_storedTokenIsSentAndExpiredSessionIsCleared() throws Exception {
-        session.save("old-token");
-        server.enqueue(json(401, "{\"code\":\"UNAUTHORIZED\",\"message\":\"UNAUTHORIZED\"}"));
-
-        Result<User> result = call(repository::loadCurrentUser);
-
-        assertEquals(AppError.SESSION_EXPIRED, result.error());
-        assertEquals("Bearer old-token", server.takeRequest().getHeader("Authorization"));
-        assertNull(session.token());
-    }
-
-    @Test
     public void REQ01_unreachableServerMapsToNetworkError() throws IOException {
         server.shutdown();
 

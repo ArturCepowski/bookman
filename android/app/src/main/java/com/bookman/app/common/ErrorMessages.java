@@ -21,6 +21,12 @@ public final class ErrorMessages {
                 return R.string.error_invalid_credentials;
             case SESSION_EXPIRED:
                 return R.string.error_session_expired;
+            case FORBIDDEN:
+                return R.string.error_forbidden;
+            case ICAL_UNREACHABLE:
+                return R.string.error_ical_unreachable;
+            case ICAL_NOT_A_CALENDAR:
+                return R.string.error_ical_not_a_calendar;
             default:
                 return R.string.error_unknown;
         }

@@ -1,6 +1,6 @@
 # Bookman – Implementation Plan
 
-**Project Status:** Stage 1 done  
+**Project Status:** Stages 1–2 done  
 **Last updated:** 2026-10-14
 
 ---
@@ -50,7 +50,7 @@ Each stage includes automated tests for all implemented requirements.
 - [x] Gradle project (AGP 8.13, compileSdk/targetSdk 35, minSdk 26)
 - [x] Retrofit + OkHttp, auth interceptor (adds token, clears session on 401)
 - [x] Hilt DI
-- [x] `LoginViewModel`, `RegisterViewModel`, `HomeViewModel` + `AuthRepository`
+- [x] `LoginViewModel`, `RegisterViewModel`, `HomeViewModel` (replaced by the apartment list in Stage 2) + `AuthRepository`
 - [x] Login, register and placeholder home screens (XML + Material 3, Navigation)
 - [x] Token storage in app-private SharedPreferences (EncryptedSharedPreferences is deprecated)
 - [x] EN + PL strings for every user-visible text
@@ -64,8 +64,8 @@ Each stage includes automated tests for all implemented requirements.
 | E-mail unique, case-insensitive, error shown | `AuthApiTest.REQ01_duplicateEmailIsRejectedCaseInsensitively`, `AuthRepositoryImplTest.REQ01_duplicateEmailMapsToEmailTaken`, `RegisterViewModelTest.REQ01_existingEmailShowsError` |
 | Phone required, E.164 | `AuthApiTest.REQ01_phoneNumberMustBeE164`, `AuthApiTest.REQ01_phoneNumberIsRequired`, `RegistrationFormTest.REQ01_phoneMustBeE164` |
 | Login | `AuthApiTest.REQ01_loginWithCorrectCredentialsReturnsToken`, `AuthApiTest.REQ01_loginWithWrongPasswordOrUnknownEmailFails`, `LoginViewModelTest.REQ01_*` |
-| Stays logged in until logout / expiry | `AuthApiTest.REQ01_tokenKeepsUserLoggedIn`, `AuthApiTest.REQ01_expiredSessionIsRejected`, `JwtServiceTest.REQ01_tokenIsValidUntilTtlThenExpires`, `HomeViewModelTest.REQ01_expiredSessionLogsOut`, `HomeViewModelTest.REQ01_logoutEndsSession` |
-| Logged-in user sees apartment list | Deferred to Stage 2 (REQ-03); Stage 1 shows a placeholder home screen |
+| Stays logged in until logout / expiry | `AuthApiTest.REQ01_tokenKeepsUserLoggedIn`, `AuthApiTest.REQ01_expiredSessionIsRejected`, `JwtServiceTest.REQ01_tokenIsValidUntilTtlThenExpires`, `ApartmentListViewModelTest.REQ01_expiredSessionIsReported`, `ApartmentListViewModelTest.REQ01_logoutEndsSession`, `ProfileRepositoryImplTest.REQ01_expiredSessionIsClearedAndReported` |
+| Logged-in user sees apartment list | Stage 2: the apartment list (REQ-03) is the start screen for a stored session |
 
 Commands: `cd backend && ./gradlew build` (13 tests), `cd android && ./gradlew assembleDebug testDebugUnitTest lint` (18 tests, lint clean).
 Manual (owner): run backend locally, start the debug app on an emulator, register, kill and reopen the app (still logged in), log out.
@@ -74,6 +74,7 @@ Manual (owner): run backend locally, start the debug app on an emulator, registe
 
 ## Stage 2: Apartments and apartment management
 
+**Status:** ✅ Done
 **Objective:** Users can create apartments and manage their list and settings.
 
 ### Requirements implemented
@@ -81,40 +82,48 @@ Manual (owner): run backend locally, start the debug app on an emulator, registe
 - **REQ-03:** Apartment list (shows all apartments where user has a role)
 - **REQ-04:** Register an apartment (name, Booking.com link, iCal URL, timezone)
 - **REQ-05:** Edit and delete apartment (ADMIN only)
+- **NFR-03:** iCal URL returned only to ADMIN
 
 ### Implementation checklist
 
 #### Backend
-- [ ] `User` entity: add phone, language (locale) fields
-- [ ] `Apartment` entity, `ApartmentRole` enum, `ApartmentUser` join table
-- [ ] Apartment repositories (JPA + Spring Data)
-- [ ] `PUT /users/{id}` endpoint (profile update)
-- [ ] `GET /apartments` endpoint (list for current user)
-- [ ] `POST /apartments` endpoint (register apartment, validate iCal URL)
-- [ ] `PUT /apartments/{id}` endpoint (ADMIN only)
-- [ ] `DELETE /apartments/{id}` endpoint (ADMIN only)
-- [ ] Authorization: `@PreAuthorize` checks for ADMIN role in apartment
-- [ ] Flyway migration: create tables for User, Apartment, ApartmentUser, ApartmentRole
-- [ ] Unit/integration tests for all endpoints and authorization
+- [x] `GET/PUT /api/users/me` – phone + language; e-mail is not part of the update request
+- [x] Flyway `V2__apartments.sql`: `apartment`, `apartment_member` (PK apartment+user, role CHECK,
+      index on `user_id`, partial unique index = one ADMIN per apartment, `ON DELETE CASCADE`) – per Q-09
+- [x] `GET /api/apartments` (caller's apartments + role), `GET /api/apartments/{id}`,
+      `POST /api/apartments`, `PUT /api/apartments/{id}`, `DELETE /api/apartments/{id}`
+- [x] `ApartmentAccess`: every apartment-scoped call looks up the caller's membership; no row or wrong role → 403
+- [x] iCal URL check on register/edit (Q-12): `CalendarFeedVerifier` downloads and parses the feed with
+      ical4j (relaxed, Q-08); unchanged URL is not re-downloaded on edit
+- [x] SSRF guard: only `https` URLs on `booking.com` hosts, no redirects, 10 s timeout, 5 MB limit (Q-17)
+- [x] `ApartmentRegisteredEvent` published on registration – Stage 3 starts the first import from it
 
 #### Android
-- [ ] `UserViewModel` (profile data, language selection)
-- [ ] `Apartment` entity and Room DAO
-- [ ] `ApartmentViewModel` (list, register, edit, delete)
-- [ ] Profile screen (phone, language picker)
-- [ ] Apartment list screen with empty state
-- [ ] Register apartment screen (name, link, iCal URL, timezone)
-- [ ] Edit apartment dialog (ADMIN only)
-- [ ] Delete apartment confirmation dialog
-- [ ] Unit tests for ViewModels
+- [x] Apartment list as the main screen after login (name + role, pull to refresh, empty state, register button)
+- [x] Apartment details; edit/delete menu only for ADMIN, delete confirmation dialog; iCal link shown only when the backend sends it
+- [x] Register/edit apartment form (name 1–60, Booking.com links, time-zone picker defaulting to `Europe/Warsaw`)
+- [x] Profile screen (e-mail read-only, phone, language EN/PL saved on the backend)
+- [x] Expired session on any screen returns to login
+- Room is still not needed (lists are always fetched fresh); revisit if offline access becomes a requirement.
 
 ### Acceptance criteria verification
-- Backend: `cd backend && ./gradlew build` passes
-- Android: `cd android && ./gradlew assembleDebug testDebugUnitTest lint` passes
-- Tests: `REQ02_userCanEditPhoneAndLanguage`, `REQ03_apartmentListShowsUserRoles`, `REQ04_registerApartment`, `REQ05_editAndDeleteApartment`
-- Manual: create apartment, edit name, delete apartment; see them in list
+| Criterion | Verified by |
+|---|---|
+| REQ-02 view/edit phone + language, saved on backend | `ProfileApiTest.REQ02_userCanViewAndEditPhoneAndLanguage`, `ProfileViewModelTest.REQ02_*`, `ProfileRepositoryImplTest.REQ02_*` |
+| REQ-02 e-mail cannot be changed | `ProfileApiTest.REQ02_emailCannotBeChanged` |
+| REQ-03 list with name + role, different roles per apartment | `ApartmentApiTest.REQ03_listShowsOnlyMyApartmentsWithMyRole`, `ApartmentListViewModelTest.REQ03_showsApartmentsWithRoles` |
+| REQ-03 empty state | `ApartmentApiTest.REQ03_newUserHasEmptyList`, `ApartmentListViewModelTest.REQ03_emptyStateOnlyAfterSuccessfulEmptyLoad` |
+| REQ-04 any user registers and becomes ADMIN; name 1–60; default time zone | `ApartmentApiTest.REQ04_registrationMakesCallerAdminWithDefaultTimeZone`, `…REQ04_nameMustHave1To60Characters`, `ApartmentFormTest.REQ04_*` |
+| REQ-04 invalid/unreachable iCal rejected with message | `ApartmentApiTest.REQ04_unreachableOrInvalidIcalIsRejected`, `HttpCalendarFeedVerifierTest.REQ04_*`, `ApartmentFormViewModelTest.REQ04_unreachableIcalIsShownOnTheIcalField` |
+| REQ-04 first import triggered immediately | `ApartmentApiTest.REQ04_registrationTriggersFirstImport` (event published); the import itself is Stage 3 |
+| REQ-05 CLEANING_SERVICE does not see edit/delete | `ApartmentDetailViewModelTest.REQ05_cleaningServiceDoesNotGetEditOrDeleteActions` |
+| REQ-05 backend returns 403 for non-admins | `ApartmentApiTest.REQ05_cleaningServiceCannotEditOrDeleteApartment`, `…REQ05_userWithoutRoleIsForbidden` |
+| REQ-05 delete removes roles (reservations/invitations: same cascade, tables come in Stages 3–4) | `ApartmentApiTest.REQ05_deletingApartmentRemovesItsRoles` |
+| NFR-03 iCal URL only for ADMIN | `ApartmentApiTest.NFR03_icalUrlIsShownOnlyToAdmin`, `ApartmentDetailViewModelTest.NFR03_*` |
 
-**Note:** iCal URL validation is implemented (fetch and parse on registration), but actual reservation import is Stage 3.
+Commands: `cd backend && ./gradlew build` (36 tests), `cd android && ./gradlew assembleDebug testDebugUnitTest lint` (41 tests, lint clean).
+Manual (owner): register an apartment with a real Booking.com iCal export link, check the list/role, edit it,
+log in as another user (no access), delete it; change phone/language in the profile.
 
 ---
 
@@ -319,8 +328,8 @@ After each stage is merged:
 
 | Stage | Status | Branch | PR |
 |-------|--------|--------|-----|
-| 1. Authentication | ✅ Done | `claude/hopeful-brahmagupta-3cr7bc` | Stage 1 PR |
-| 2. Apartments | ⏳ Planned | TBD | TBD |
+| 1. Authentication | ✅ Done | `claude/hopeful-brahmagupta-3cr7bc` | [#2](https://github.com/ArturCepowski/bookman/pull/2) |
+| 2. Apartments | ✅ Done | `claude/hopeful-brahmagupta-3cr7bc-stage2` | Stage 2 PR |
 | 3. Reservations | ⏳ Planned | TBD | TBD |
 | 4. Invitations | ⏳ Planned | TBD | TBD |
 | 5. Notifications | ⏳ Planned | TBD | TBD |

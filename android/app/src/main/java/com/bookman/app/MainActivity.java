@@ -31,9 +31,9 @@ public class MainActivity extends AppCompatActivity {
         // REQ-01: a stored session skips the login screen until logout or expiry.
         // setGraph on every onCreate is required; after recreation the saved back stack takes precedence.
         NavGraph graph = navController.getNavInflater().inflate(R.navigation.nav_graph);
-        graph.setStartDestination(authRepository.isLoggedIn() ? R.id.homeFragment : R.id.loginFragment);
+        graph.setStartDestination(authRepository.isLoggedIn() ? R.id.apartmentListFragment : R.id.loginFragment);
         navController.setGraph(graph);
-        AppBarConfiguration appBar = new AppBarConfiguration.Builder(R.id.loginFragment, R.id.homeFragment).build();
+        AppBarConfiguration appBar = new AppBarConfiguration.Builder(R.id.loginFragment, R.id.apartmentListFragment).build();
         NavigationUI.setupActionBarWithNavController(this, navController, appBar);
     }
 
