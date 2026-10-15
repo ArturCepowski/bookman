@@ -43,7 +43,7 @@ public class AuthRepositoryImpl implements AuthRepository {
 
     @Override
     public void logout() {
-        // ASSUMPTION(REQ-01): logout is client-side (JWT is stateless); the token simply expires on the server.
+        // REQ-01 / Q-15 (confirmed): logout is client-side (JWT is stateless); the token expires on the server.
         sessionStore.clear();
     }
 

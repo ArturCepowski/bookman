@@ -9,7 +9,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
  * The backend downloads the iCal URL, so it must not be able to point at internal hosts (SSRF, e.g. the
- * AWS metadata endpoint). ASSUMPTION(REQ-04): only https URLs on Booking.com hosts are accepted, see Q-17.
+ * AWS metadata endpoint). REQ-04 / Q-17 (confirmed): only https URLs on Booking.com hosts are accepted.
  */
 @ConfigurationProperties(prefix = "bookman.apartment")
 public record ApartmentUrlPolicy(List<String> allowedHosts) {

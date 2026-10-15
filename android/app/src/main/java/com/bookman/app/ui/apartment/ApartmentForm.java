@@ -39,7 +39,7 @@ public final class ApartmentForm {
         return nameError == null && bookingUrlError == null && icalUrlError == null && timeZoneError == null;
     }
 
-    /** ASSUMPTION(REQ-04): https links on booking.com only, same rule as the backend (Q-17). */
+    /** REQ-04 / Q-17 (confirmed): https links on booking.com only, same rule as the backend. */
     static boolean isBookingUrl(String value) {
         try {
             URI uri = new URI(value);

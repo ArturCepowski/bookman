@@ -9,7 +9,7 @@ import jakarta.validation.constraints.Size;
 
 public record RegisterRequest(
         @NotBlank @Email @Size(max = 254) String email,
-        // ASSUMPTION(REQ-01): password 8-72 chars (72 = bcrypt input limit); spec defines no policy, see Q-15.
+        // REQ-01 / Q-15 (confirmed): password 8-72 chars (72 = bcrypt input limit).
         @NotBlank @Size(min = 8, max = 72) String password,
         @NotBlank @Pattern(regexp = PhoneNumbers.E164, message = "must be in E.164 format, e.g. +48600100200")
         String phoneNumber,
