@@ -1,6 +1,9 @@
 spring:
   application:
     name: bookman-backend
+  config:
+    # Optional local file with KEY=VALUE lines (see .env.example); real environment variables take precedence.
+    import: optional:file:.env[.properties]
   datasource:
     # Defaults match docker-compose.yml (local development only). Production sets these via env.
     url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/bookman}
