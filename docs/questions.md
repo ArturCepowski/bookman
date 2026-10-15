@@ -136,6 +136,25 @@
   - Backend production `.env` reads from environment variable `DATABASE_URL` (or similar)
 - Flyway migrations run on backend startup (Spring Boot + Flyway auto-config).
 
+### Q-15 (REQ-01): Password policy, session length, logout
+**Status:** OPEN – implemented with assumptions, please confirm
+
+The spec says the user "stays logged in until they log out or the session expires" but defines no
+expiry, password rules or server-side logout. Assumptions in code (`ASSUMPTION(REQ-01)`):
+- Password: 8–72 characters, no composition rules (72 = bcrypt input limit).
+- Session: JWT valid for **30 days** (`BOOKMAN_JWT_TTL`), no refresh token; after expiry the app
+  returns to the login screen.
+- Logout is client-side (token deleted from the phone). A stolen token stays valid until expiry;
+  server-side revocation would need a token blacklist or short-lived tokens + refresh tokens.
+
+Questions: is 30 days acceptable? Is server-side logout/revocation needed in v1?
+
+### Q-16 (NFR-02, Q-06): Production API address
+**Status:** OPEN
+
+Release builds use `https://bookman.invalid/` as a placeholder base URL until the AWS hosting has a
+domain + TLS certificate. Build with `-PbookmanApiUrl=https://<real-host>/`. Which domain will the API use?
+
 ## External/Product decisions (not blocking implementation)
 
 These answers are assumed in the spec but require external decision:

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name" translatable="false">Bookman</string>
+
+    <string name="title_login">Log in</string>
+    <string name="title_register">Create account</string>
+    <string name="title_home">Bookman</string>
+
+    <string name="label_email">E-mail</string>
+    <string name="label_password">Password</string>
+    <string name="label_phone">Phone number</string>
+    <string name="hint_phone">International format, e.g. +48600100200</string>
+    <string name="hint_password">At least 8 characters</string>
+
+    <string name="action_login">Log in</string>
+    <string name="action_register">Create account</string>
+    <string name="action_go_to_register">No account yet? Create one</string>
+    <string name="action_logout">Log out</string>
+
+    <string name="home_logged_in_as">Logged in as %1$s</string>
+
+    <string name="field_error_email">Enter a valid e-mail address</string>
+    <string name="field_error_password">Password must have at least 8 characters</string>
+    <string name="field_error_phone">Enter the number with country code, e.g. +48600100200</string>
+    <string name="field_error_required">This field is required</string>
+
+    <string name="error_network">Cannot reach the server. Check your connection and try again.</string>
+    <string name="error_validation">Some of the data is invalid. Check the form and try again.</string>
+    <string name="error_email_taken">An account with this e-mail already exists</string>
+    <string name="error_invalid_credentials">Wrong e-mail or password</string>
+    <string name="error_session_expired">Your session has expired. Please log in again.</string>
+    <string name="error_unknown">Something went wrong. Please try again.</string>
+</resources>
