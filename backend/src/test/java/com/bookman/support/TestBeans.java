@@ -1,5 +1,6 @@
 package com.bookman.support;
 
+import com.bookman.reservation.ReservationImporter;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
@@ -11,5 +12,17 @@ public class TestBeans {
     @Primary
     FakeCalendarFeedVerifier fakeCalendarFeedVerifier() {
         return new FakeCalendarFeedVerifier();
+    }
+
+    @Bean
+    @Primary
+    FakeReservationSource fakeReservationSource() {
+        return new FakeReservationSource();
+    }
+
+    @Bean
+    @Primary
+    SyncImportRunner syncImportRunner(ReservationImporter importer) {
+        return new SyncImportRunner(importer);
     }
 }

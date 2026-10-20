@@ -35,6 +35,10 @@ public final class ApiErrors {
                 return AppError.ICAL_UNREACHABLE;
             case "ICAL_NOT_A_CALENDAR":
                 return AppError.ICAL_NOT_A_CALENDAR;
+            case "IMPORT_FAILED":
+                return AppError.IMPORT_FAILED;
+            case "STATUS_CONFLICT":
+                return AppError.STATUS_CONFLICT;
             default:
                 return AppError.UNKNOWN;
         }

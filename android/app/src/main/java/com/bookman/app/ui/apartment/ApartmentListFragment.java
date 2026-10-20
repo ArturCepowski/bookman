@@ -35,7 +35,7 @@ public class ApartmentListFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         viewModel = new ViewModelProvider(this).get(ApartmentListViewModel.class);
-        ApartmentAdapter adapter = new ApartmentAdapter(item -> open(R.id.action_apartments_to_detail, item.id));
+        ApartmentAdapter adapter = new ApartmentAdapter(item -> open(R.id.action_apartments_to_reservations, item.id));
         binding.list.setAdapter(adapter);
         binding.swipeRefresh.setOnRefreshListener(viewModel::refresh);
         binding.addApartment.setOnClickListener(v ->

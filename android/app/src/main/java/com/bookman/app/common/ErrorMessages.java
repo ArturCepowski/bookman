@@ -27,6 +27,10 @@ public final class ErrorMessages {
                 return R.string.error_ical_unreachable;
             case ICAL_NOT_A_CALENDAR:
                 return R.string.error_ical_not_a_calendar;
+            case IMPORT_FAILED:
+                return R.string.error_import_failed;
+            case STATUS_CONFLICT:
+                return R.string.error_status_conflict;
             default:
                 return R.string.error_unknown;
         }

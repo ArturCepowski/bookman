@@ -166,18 +166,38 @@ The host list is configurable (`bookman.apartment.allowed-hosts`) so other chann
 No other domains need to be accepted in v1.
 
 ### Q-18 (REQ-06, Q-08): Real iCal fixture
-**Status:** OPEN – the owner agreed on 2026-10-15 to provide a real anonymized export; waiting for the file
+**Status:** RESOLVED – the owner provided a real export on 2026-10-20
 
-Q-08 asks for a real, anonymized Booking.com iCal export as a test fixture. I do not have one, so
-`backend/src/test/resources/ical/booking-sample.ics` is a **synthetic** feed in the documented Booking.com
-format. Please provide a real export (replace the token in the URL and any notes) before Stage 3, which parses
-reservations from it.
+`backend/src/test/resources/ical/booking-export-real.ics` is the real Booking.com export (only the event UID was
+replaced). Parser and HTTP-source tests use it. `booking-export-multi.ics` is a synthetic feed in exactly the same
+format with extra cases (missing UID / DTEND) that must be skipped.
 
 ### Q-19 (REQ-02, REQ-14): Language change takes effect where?
 **Status:** INFO
 
 In Stage 2 the language chosen in the profile is saved on the backend (used for SMS, REQ-14). Switching the
 app UI language immediately is part of Stage 6 (REQ-14); until then the UI follows the system language.
+
+### Q-20 (REQ-06, Q-01, Q-04): Bookings vs. manually closed dates; reservations that come back
+**Status:** OPEN – implemented with assumptions, please confirm
+
+1. The real export shows that Booking.com marks **every** blocked period the same way (`SUMMARY:CLOSED - Not
+   available`, no guest data). The app cannot tell a guest booking from dates the owner closed by hand.
+   `ASSUMPTION(REQ-06)`: every event is treated as a reservation (it gets a cleaning status and, in Stage 5,
+   reminders). If you close dates manually, they will show up in the list too.
+2. `ASSUMPTION(REQ-06)`: a reservation that was cancelled (disappeared from the feed) and later reappears with the
+   same UID becomes active again; its cleaning status is kept.
+
+Questions: is (1) acceptable for v1, or should manually closed dates be filtered somehow? Is (2) right?
+
+### Q-21 (REQ-08): Details of the status rules
+**Status:** OPEN – implemented with assumptions, please confirm
+
+- Any CLEANING_SERVICE member may mark a TAKEN cleaning as DONE, even if a colleague took it (the spec only
+  restricts the direction NOT_PLANNED → TAKEN → DONE). The responsible person stays the one who took it.
+- When an ADMIN sets TAKEN, the admin is recorded as responsible; setting NOT_PLANNED clears the responsible person.
+- Setting the status a reservation already has is rejected with 409 – in practice someone else was faster, and the
+  app reloads the list.
 
 ## External/Product decisions (not blocking implementation)
 

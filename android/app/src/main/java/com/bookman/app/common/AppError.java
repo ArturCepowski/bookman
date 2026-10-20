@@ -10,5 +10,7 @@ public enum AppError {
     FORBIDDEN,
     ICAL_UNREACHABLE,
     ICAL_NOT_A_CALENDAR,
+    IMPORT_FAILED,
+    STATUS_CONFLICT,
     UNKNOWN
 }

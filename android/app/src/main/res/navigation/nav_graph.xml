@@ -41,14 +41,26 @@
         android:name="com.bookman.app.ui.apartment.ApartmentListFragment"
         android:label="@string/title_apartments">
         <action
-            android:id="@+id/action_apartments_to_detail"
-            app:destination="@id/apartmentDetailFragment" />
+            android:id="@+id/action_apartments_to_reservations"
+            app:destination="@id/reservationListFragment" />
         <action
             android:id="@+id/action_apartments_to_form"
             app:destination="@id/apartmentFormFragment" />
         <action
             android:id="@+id/action_apartments_to_profile"
             app:destination="@id/profileFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/reservationListFragment"
+        android:name="com.bookman.app.ui.reservation.ReservationListFragment"
+        android:label="@string/title_reservations">
+        <argument
+            android:name="apartmentId"
+            app:argType="long" />
+        <action
+            android:id="@+id/action_reservations_to_detail"
+            app:destination="@id/apartmentDetailFragment" />
     </fragment>
 
     <fragment
@@ -72,8 +84,8 @@
             android:defaultValue="-1L"
             app:argType="long" />
         <action
-            android:id="@+id/action_form_to_detail"
-            app:destination="@id/apartmentDetailFragment" />
+            android:id="@+id/action_form_to_reservations"
+            app:destination="@id/reservationListFragment" />
     </fragment>
 
     <fragment
