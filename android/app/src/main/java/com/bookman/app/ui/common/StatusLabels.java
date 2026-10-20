@@ -16,6 +16,8 @@ public final class StatusLabels {
                 return R.string.status_taken;
             case DONE:
                 return R.string.status_done;
+            case PRIVATE:
+                return R.string.status_private;
             default:
                 return R.string.status_not_planned;
         }
@@ -29,6 +31,8 @@ public final class StatusLabels {
                 return R.string.action_take_cleaning;
             case DONE:
                 return R.string.action_mark_cleaned;
+            case PRIVATE:
+                return R.string.action_mark_private;
             default:
                 return R.string.action_mark_not_planned;
         }

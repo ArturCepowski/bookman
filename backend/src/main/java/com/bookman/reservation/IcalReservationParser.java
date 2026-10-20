@@ -22,8 +22,8 @@ import org.slf4j.LoggerFactory;
 /**
  * Q-08: strict only about the fields we use. An event without UID, DTSTART or DTEND is skipped with a
  * warning instead of failing the import. Booking.com exports whole days: DTSTART = check-in, DTEND = check-out.
- * ASSUMPTION(REQ-06): every event is a reservation – the export does not distinguish guest bookings from dates
- * closed by hand (all are "CLOSED - Not available"), see Q-20.
+ * Every event becomes a reservation – the export does not distinguish guest bookings from dates closed by hand
+ * (all are "CLOSED - Not available"); the admin marks the latter as PRIVATE (Q-20).
  */
 @org.springframework.stereotype.Component
 public class IcalReservationParser {

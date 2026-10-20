@@ -9,14 +9,16 @@ import org.springframework.http.HttpStatus;
 
 /**
  * REQ-08 / Q-02: CLEANING_SERVICE may only go NOT_PLANNED → TAKEN → DONE; ADMIN may set any status.
- * ASSUMPTION(REQ-08): any cleaning service member may finish a cleaning a colleague took (Q-21).
+ * Q-21 (owner decision): any cleaning service member may finish a cleaning a colleague took.
+ * Q-20 (owner decision): PRIVATE is set by ADMIN only, and CLEANING_SERVICE cannot change it.
  */
 final class CleaningStatusPolicy {
 
     private static final Map<CleaningStatus, Set<CleaningStatus>> CLEANING_SERVICE_MOVES = Map.of(
             CleaningStatus.NOT_PLANNED, Set.of(CleaningStatus.TAKEN),
             CleaningStatus.TAKEN, Set.of(CleaningStatus.DONE),
-            CleaningStatus.DONE, Set.of());
+            CleaningStatus.DONE, Set.of(),
+            CleaningStatus.PRIVATE, Set.of());
 
     private CleaningStatusPolicy() {
     }

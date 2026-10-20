@@ -179,23 +179,23 @@ In Stage 2 the language chosen in the profile is saved on the backend (used for 
 app UI language immediately is part of Stage 6 (REQ-14); until then the UI follows the system language.
 
 ### Q-20 (REQ-06, Q-01, Q-04): Bookings vs. manually closed dates; reservations that come back
-**Status:** OPEN – implemented with assumptions, please confirm
+**Status:** PART 1 RESOLVED (owner decision 2026-10-20) · PART 2 OPEN
 
-1. The real export shows that Booking.com marks **every** blocked period the same way (`SUMMARY:CLOSED - Not
-   available`, no guest data). The app cannot tell a guest booking from dates the owner closed by hand.
-   `ASSUMPTION(REQ-06)`: every event is treated as a reservation (it gets a cleaning status and, in Stage 5,
-   reminders). If you close dates manually, they will show up in the list too.
+1. Booking.com marks **every** blocked period the same way (`SUMMARY:CLOSED - Not available`), so the app cannot
+   tell guest bookings from dates the owner closed by hand. **Decision:** every event is imported as a reservation,
+   and there is an extra cleaning status **`PRIVATE`** that only the apartment's ADMIN can set. The cleaning service
+   cannot change a PRIVATE reservation (it sees it as "Private" without actions). Only the ADMIN can set it back.
+   *Proposed spec change for REQ-08:* add `PRIVATE` to the cleaning statuses with the rules above.
+   *Impact on Stage 5:* PRIVATE reservations must not trigger "not planned" / "not done" SMS (REQ-11/12).
 2. `ASSUMPTION(REQ-06)`: a reservation that was cancelled (disappeared from the feed) and later reappears with the
-   same UID becomes active again; its cleaning status is kept.
-
-Questions: is (1) acceptable for v1, or should manually closed dates be filtered somehow? Is (2) right?
+   same UID becomes active again; its cleaning status is kept. Please confirm.
 
 ### Q-21 (REQ-08): Details of the status rules
-**Status:** OPEN – implemented with assumptions, please confirm
+**Status:** RESOLVED (owner decision 2026-10-20)
 
-- Any CLEANING_SERVICE member may mark a TAKEN cleaning as DONE, even if a colleague took it (the spec only
-  restricts the direction NOT_PLANNED → TAKEN → DONE). The responsible person stays the one who took it.
-- When an ADMIN sets TAKEN, the admin is recorded as responsible; setting NOT_PLANNED clears the responsible person.
+- Any CLEANING_SERVICE member may mark a TAKEN cleaning as DONE, even if a colleague took it. The responsible
+  person stays the one who took it.
+- When an ADMIN sets TAKEN, the admin is recorded as responsible; NOT_PLANNED and PRIVATE clear the responsible person.
 - Setting the status a reservation already has is rejected with 409 – in practice someone else was faster, and the
   app reloads the list.
 

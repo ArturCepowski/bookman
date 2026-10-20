@@ -20,10 +20,15 @@ public class CleaningActionsTest {
     }
 
     @Test
+    public void REQ08_privateIsFrozenForCleaningService() {
+        assertEquals(Collections.emptyList(), CleaningActions.targets(Role.CLEANING_SERVICE, CleaningStatus.PRIVATE));
+    }
+
+    @Test
     public void REQ08_adminCanChooseAnyOtherStatus() {
-        assertEquals(Arrays.asList(CleaningStatus.NOT_PLANNED, CleaningStatus.TAKEN),
+        assertEquals(Arrays.asList(CleaningStatus.NOT_PLANNED, CleaningStatus.TAKEN, CleaningStatus.PRIVATE),
                 CleaningActions.targets(Role.ADMIN, CleaningStatus.DONE));
-        assertEquals(Arrays.asList(CleaningStatus.TAKEN, CleaningStatus.DONE),
-                CleaningActions.targets(Role.ADMIN, CleaningStatus.NOT_PLANNED));
+        assertEquals(Arrays.asList(CleaningStatus.NOT_PLANNED, CleaningStatus.TAKEN, CleaningStatus.DONE),
+                CleaningActions.targets(Role.ADMIN, CleaningStatus.PRIVATE));
     }
 }

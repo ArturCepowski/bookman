@@ -7,7 +7,8 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Which status changes to offer (REQ-08 / Q-02). UI hint only – the backend enforces the same rules.
+ * Which status changes to offer (REQ-08 / Q-02); PRIVATE is admin-only and frozen for the cleaning service (Q-20).
+ * UI hint only – the backend enforces the same rules.
  */
 public final class CleaningActions {
 

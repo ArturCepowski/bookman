@@ -78,6 +78,24 @@ class CleaningStatusApiTest extends IntegrationTest {
     }
 
     @Test
+    void REQ08_adminMarksManuallyBlockedDatesPrivateAndCleaningServiceCannotChangeIt() throws Exception {
+        change(cleaner, "PRIVATE").andExpect(status().isForbidden());
+        change(cleaner, "TAKEN").andExpect(status().isOk());
+
+        change(admin, "PRIVATE")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.cleaningStatus").value("PRIVATE"))
+                .andExpect(jsonPath("$.takenBy").doesNotExist());
+        change(cleaner, "TAKEN").andExpect(status().isForbidden());
+        change(cleaner, "DONE").andExpect(status().isForbidden());
+        change(cleaner, "NOT_PLANNED").andExpect(status().isForbidden());
+
+        call(cleaner, get(listUrl(apartment)), null)
+                .andExpect(jsonPath("$[0].cleaningStatus").value("PRIVATE"));
+        change(admin, "NOT_PLANNED").andExpect(status().isOk());
+    }
+
+    @Test
     void REQ08_everyChangeStoresWhoAndWhen() throws Exception {
         Instant before = Instant.now().minus(1, ChronoUnit.SECONDS);
         change(cleaner, "TAKEN");

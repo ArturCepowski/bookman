@@ -78,4 +78,6 @@
     <string name="action_change_status">Change status</string>
     <string name="error_import_failed">Could not refresh reservations from Booking.com. Showing the last known list.</string>
     <string name="error_status_conflict">Someone else changed this cleaning in the meantime. The list was refreshed.</string>
+    <string name="status_private">Private (blocked by the owner)</string>
+    <string name="action_mark_private">Mark as private</string>
 </resources>

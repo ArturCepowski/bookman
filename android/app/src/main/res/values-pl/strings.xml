@@ -74,4 +74,6 @@
     <string name="action_change_status">Zmień status</string>
     <string name="error_import_failed">Nie udało się odświeżyć rezerwacji z Booking.com. Pokazuję ostatnią znaną listę.</string>
     <string name="error_status_conflict">Ktoś inny zmienił w międzyczasie to sprzątanie. Lista została odświeżona.</string>
+    <string name="status_private">Prywatne (zablokowane przez właściciela)</string>
+    <string name="action_mark_private">Oznacz jako prywatne</string>
 </resources>

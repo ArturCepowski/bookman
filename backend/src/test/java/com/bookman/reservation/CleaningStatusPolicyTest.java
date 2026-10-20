@@ -2,6 +2,7 @@ package com.bookman.reservation;
 
 import static com.bookman.reservation.CleaningStatus.DONE;
 import static com.bookman.reservation.CleaningStatus.NOT_PLANNED;
+import static com.bookman.reservation.CleaningStatus.PRIVATE;
 import static com.bookman.reservation.CleaningStatus.TAKEN;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -32,6 +33,20 @@ class CleaningStatusPolicyTest {
                     assertThatCode(() -> CleaningStatusPolicy.check(Role.ADMIN, from, to)).doesNotThrowAnyException();
                 }
             }
+        }
+    }
+
+    @Test
+    void REQ08_onlyAdminSetsOrLeavesPrivate() {
+        assertThatCode(() -> CleaningStatusPolicy.check(Role.ADMIN, NOT_PLANNED, PRIVATE)).doesNotThrowAnyException();
+        assertThatCode(() -> CleaningStatusPolicy.check(Role.ADMIN, PRIVATE, NOT_PLANNED)).doesNotThrowAnyException();
+        for (CleaningStatus from : new CleaningStatus[] {NOT_PLANNED, TAKEN, DONE}) {
+            assertThatThrownBy(() -> CleaningStatusPolicy.check(Role.CLEANING_SERVICE, from, PRIVATE))
+                    .isInstanceOfSatisfying(ApiException.class, e -> assertCode(e, ErrorCode.FORBIDDEN));
+        }
+        for (CleaningStatus to : new CleaningStatus[] {NOT_PLANNED, TAKEN, DONE}) {
+            assertThatThrownBy(() -> CleaningStatusPolicy.check(Role.CLEANING_SERVICE, PRIVATE, to))
+                    .isInstanceOfSatisfying(ApiException.class, e -> assertCode(e, ErrorCode.FORBIDDEN));
         }
     }
 
