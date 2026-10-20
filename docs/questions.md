@@ -208,26 +208,37 @@ app UI language immediately is part of Stage 6 (REQ-14); until then the UI follo
 - The admin cannot be removed (spec 6: single admin, no transfer). A removed cleaning service member keeps being shown
   as "taken by" on reservations they took earlier (history is not rewritten).
 
-### Q-23 (REQ-11, REQ-12, REQ-13): Reminder details
+### Q-23 (REQ-11, REQ-12, REQ-13): Reminder details (now push, see Q-24)
 **Status:** OPEN – implemented with assumptions, please confirm
 
 - Reminders are **off** until the admin sets an hour (the spec gives no default). `ASSUMPTION(REQ-11)`
 - If the backend is down at the reminder minute, the SMS is still sent when it comes back **within one hour**;
   later than that it is skipped for that day. `ASSUMPTION(REQ-11)`
-- Delivery is "at least once": if the server crashes exactly between the provider accepting an SMS and the database
-  recording it, that one SMS may be sent twice. Everything else (retries, restarts, a second scheduler run) is
-  deduplicated by the database.
-- Polish texts contain diacritics, so they are sent as Unicode SMS (70 characters per part instead of 160). If cost
-  matters, the texts can be written without diacritics.
-- A reservation of an apartment with no recipients' phone numbers is impossible today (phone is required, REQ-01).
+- Delivery is "at least once": if the server crashes exactly between FCM accepting a notification and the database
+  recording it, that one notification may arrive twice. Everything else (retries, restarts, a second scheduler run)
+  is deduplicated by the database.
+
+### Q-24 (REQ-11, REQ-12, REQ-13, spec 6): Push notifications instead of SMS
+**Status:** RESOLVED – owner decision 2026-10-20 · **proposed spec change**
+
+The owner decided that reminders are delivered as **push notifications to the Bookman app** via Firebase Cloud
+Messaging (FCM), and that **SMS support is removed**. Proposed spec changes:
+- REQ-11 / REQ-12: "an SMS is sent" → "a push notification is sent to the phones of the recipients"; acceptance
+  criteria unchanged (one per recipient per reservation per day, apartment name + check-out date).
+- REQ-13 "SMS sending" → "Push sending" through a `PushSender` interface: a development implementation logs
+  messages, the production provider (FCM) is configured via environment variables, failed sends are logged and
+  retried at most 3 times.
+- Section 6 "Out of scope": remove "Push notifications (SMS only)".
+- Q-05 (SMS provider) is no longer needed.
+Consequences: a recipient gets reminders only on phones where they are logged in to Bookman and allowed notifications
+(Android 13+ asks once). Reminders for a user without such a phone are recorded as `NO_DEVICE`.
+Open follow-up: REQ-01 still requires a phone number "needed for REQ-11/12" – it is no longer used. Keep it required,
+make it optional, or remove it?
 
 ## External/Product decisions (not blocking implementation)
 
 These answers are assumed in the spec but require external decision:
 
-- **Q-05 SMS provider:** Which provider (e.g., SMSAPI.pl, Twilio) and who pays for SMS?
-  `ASSUMPTION(REQ-13)`: SMSAPI.pl is implemented (`BOOKMAN_SMS_PROVIDER=smsapi`, `BOOKMAN_SMSAPI_TOKEN`,
-  `BOOKMAN_SMSAPI_SENDER`); it needs a paid, prepaid account. Default is the logging sender – no account needed for
-  development. Another provider = one more `SmsSender` implementation.
+- **Q-05 SMS provider:** obsolete – reminders are push notifications (Q-24).
 - **Q-07 Invitations by e-mail:** Should invitations trigger email notifications, or is in-app enough? (v1: in-app only, see Q-22)
 - **Q-01 Booking.com integration:** Is iCal information (dates only, no guest data) sufficient for v1?

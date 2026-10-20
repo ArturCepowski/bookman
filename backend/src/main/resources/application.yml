@@ -16,8 +16,8 @@ spring:
   flyway:
     enabled: true
   messages:
-    # SMS texts (REQ-11/12/14): sms.properties (English) and sms_pl.properties.
-    basename: sms
+    # Reminder texts (REQ-11/12/14): reminders.properties (English) and reminders_pl.properties.
+    basename: reminders
     encoding: UTF-8
     fallback-to-system-locale: false
 
@@ -32,13 +32,14 @@ bookman:
     interval: ${BOOKMAN_IMPORT_INTERVAL:PT30M}
     initial-delay: PT1M
     scheduler-enabled: true
-  sms:
-    # REQ-13: "log" (development, default) or "smsapi" (production, see Q-05).
-    provider: ${BOOKMAN_SMS_PROVIDER:log}
+  reminders:
     scheduler-enabled: true
     planner-interval: PT1M
     dispatcher-interval: PT10S
-    smsapi:
-      url: ${BOOKMAN_SMSAPI_URL:https://api.smsapi.pl/sms.do}
-      token: ${BOOKMAN_SMSAPI_TOKEN:}
-      sender: ${BOOKMAN_SMSAPI_SENDER:}
+  push:
+    # Q-24: "log" (development, default – nothing is sent) or "fcm" (Firebase Cloud Messaging).
+    provider: ${BOOKMAN_PUSH_PROVIDER:log}
+    fcm:
+      # Path to the Firebase service-account JSON key; keep it outside the repository.
+      credentials: ${BOOKMAN_FCM_CREDENTIALS:}
+      url: https://fcm.googleapis.com

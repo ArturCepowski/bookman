@@ -107,12 +107,14 @@
     <string name="error_invitation_pending">This e-mail has already been invited</string>
     <string name="error_invitation_expired">This invitation has expired. Ask the owner to invite you again.</string>
     <string name="error_cannot_remove_admin">The admin of the apartment cannot be removed</string>
-    <string name="title_reminders">SMS reminders</string>
-    <string name="reminders_intro">SMS go to the admin and everyone from the cleaning service, at the chosen hour in the apartment\'s time zone.</string>
+    <string name="title_reminders">Cleaning reminders</string>
+    <string name="reminders_intro">Notifications go to the phones of the admin and everyone from the cleaning service (logged in to Bookman, notifications allowed), at the chosen hour in the apartment\'s time zone.</string>
     <string name="reminder_not_planned_title">Cleaning not planned</string>
     <string name="reminder_not_planned_description">Reminds about tomorrow\'s check-outs that nobody has taken yet.</string>
     <string name="reminder_not_done_title">Cleaning not done</string>
     <string name="reminder_not_done_description">Reminds about today\'s check-outs that are not marked as cleaned yet.</string>
     <string name="reminder_off">Off</string>
     <string name="reminders_saved">Reminders saved</string>
+    <string name="notification_channel_reminders">Cleaning reminders</string>
+    <string name="notification_channel_reminders_description">Cleanings that are not planned or not done yet</string>
 </resources>

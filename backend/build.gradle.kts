@@ -28,6 +28,8 @@ dependencies {
     implementation("org.flywaydb:flyway-database-postgresql")
     implementation("io.jsonwebtoken:jjwt-api:$jjwtVersion")
     implementation("org.mnode.ical4j:ical4j:4.4.0")
+    // FCM HTTP v1 needs an OAuth2 access token from the Firebase service account.
+    implementation("com.google.auth:google-auth-library-oauth2-http:1.54.0")
     runtimeOnly("io.jsonwebtoken:jjwt-impl:$jjwtVersion")
     runtimeOnly("io.jsonwebtoken:jjwt-jackson:$jjwtVersion")
     runtimeOnly("org.postgresql:postgresql")

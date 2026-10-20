@@ -8,6 +8,7 @@ import com.bookman.app.data.api.AuthResponseDto;
 import com.bookman.app.data.api.LoginRequestDto;
 import com.bookman.app.data.api.RegisterRequestDto;
 import com.bookman.app.data.api.UserDto;
+import com.bookman.app.data.session.SessionListener;
 import com.bookman.app.data.session.SessionStore;
 import java.util.concurrent.Executor;
 import retrofit2.Call;
@@ -18,11 +19,13 @@ public class AuthRepositoryImpl implements AuthRepository {
     private final AuthApi api;
     private final SessionStore sessionStore;
     private final Executor io;
+    private final SessionListener listener;
 
-    public AuthRepositoryImpl(AuthApi api, SessionStore sessionStore, Executor io) {
+    public AuthRepositoryImpl(AuthApi api, SessionStore sessionStore, Executor io, SessionListener listener) {
         this.api = api;
         this.sessionStore = sessionStore;
         this.io = io;
+        this.listener = listener;
     }
 
     @Override
@@ -44,7 +47,9 @@ public class AuthRepositoryImpl implements AuthRepository {
     @Override
     public void logout() {
         // REQ-01 / Q-15 (confirmed): logout is client-side (JWT is stateless); the token expires on the server.
+        String previous = sessionStore.token();
         sessionStore.clear();
+        listener.onLoggedOut(previous);
     }
 
     private void authenticate(Call<AuthResponseDto> call, Consumer<Result<User>> callback) {
@@ -55,6 +60,7 @@ public class AuthRepositoryImpl implements AuthRepository {
                 return;
             }
             sessionStore.save(result.value().token);
+            listener.onLoggedIn();
             callback.accept(Result.success(toUser(result.value().user)));
         });
     }

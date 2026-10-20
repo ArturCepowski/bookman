@@ -10,18 +10,23 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 
-/** One reminder SMS to one recipient; rows are created by {@link ReminderPlanner} and sent by {@link SmsDispatcher}. */
+/**
+ * One reminder for one recipient (sent to all their phones); created by {@link ReminderPlanner}, sent by
+ * {@link ReminderDispatcher}.
+ */
 @Entity
-@Table(name = "sms_notification")
-public class SmsNotification {
+@Table(name = "reminder_notification")
+public class ReminderNotification {
 
-    /** REQ-13: failed sends are retried at most 3 times (4 attempts in total), backoff 2 s / 4 s / 8 s (Q-10). */
+    /** REQ-13 (now push, Q-24): failures are retried at most 3 times (4 attempts), backoff 2 s / 4 s / 8 s (Q-10). */
     static final int MAX_ATTEMPTS = 4;
 
     public enum Status {
         PENDING,
         SENT,
-        FAILED
+        FAILED,
+        /** The recipient has no phone with the app registered (or all tokens were invalid). */
+        NO_DEVICE
     }
 
     @Id
@@ -40,11 +45,11 @@ public class SmsNotification {
     @Column(name = "reminder_date", nullable = false)
     private LocalDate reminderDate;
 
-    @Column(name = "phone_number", nullable = false)
-    private String phoneNumber;
+    @Column(nullable = false)
+    private String title;
 
     @Column(nullable = false)
-    private String message;
+    private String body;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -62,7 +67,14 @@ public class SmsNotification {
     @Column(name = "sent_at")
     private Instant sentAt;
 
-    protected SmsNotification() {
+    protected ReminderNotification() {
+    }
+
+    void markNoDevice(Instant now) {
+        attempts++;
+        status = Status.NO_DEVICE;
+        lastError = null;
+        nextAttemptAt = now;
     }
 
     void markSent(Instant now) {
@@ -102,12 +114,12 @@ public class SmsNotification {
         return reminderDate;
     }
 
-    public String getPhoneNumber() {
-        return phoneNumber;
+    public String getTitle() {
+        return title;
     }
 
-    public String getMessage() {
-        return message;
+    public String getBody() {
+        return body;
     }
 
     public Status getStatus() {

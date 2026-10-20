@@ -22,8 +22,8 @@ public class TestBeans {
 
     @Bean
     @Primary
-    FakeSmsSender fakeSmsSender() {
-        return new FakeSmsSender();
+    FakePushSender fakePushSender() {
+        return new FakePushSender();
     }
 
     @Bean

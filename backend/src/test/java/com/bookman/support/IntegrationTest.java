@@ -39,7 +39,7 @@ public abstract class IntegrationTest {
     @Autowired protected ObjectMapper json;
     @Autowired protected FakeCalendarFeedVerifier calendarFeeds;
     @Autowired protected FakeReservationSource reservationSource;
-    @Autowired protected FakeSmsSender smsSender;
+    @Autowired protected FakePushSender pushSender;
     @Autowired protected MutableClock clock;
     @Autowired private UserRepository users;
     @Autowired private ApartmentRepository apartments;
@@ -66,7 +66,7 @@ public abstract class IntegrationTest {
         users.deleteAll();
         calendarFeeds.reset();
         reservationSource.reset();
-        smsSender.reset();
+        pushSender.reset();
         clock.reset();
     }
 

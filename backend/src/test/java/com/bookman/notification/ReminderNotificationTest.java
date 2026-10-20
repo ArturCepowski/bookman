@@ -4,13 +4,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.bookman.device.DeviceTokenRepository;
 import com.bookman.reservation.ImportedReservation;
-import com.bookman.support.FakeSmsSender.Sms;
+import com.bookman.support.FakePushSender.Push;
 import com.bookman.support.IntegrationTest;
 import com.bookman.user.Language;
-import com.bookman.user.UserRepository;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZoneId;
@@ -22,17 +23,19 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 
-class SmsReminderTest extends IntegrationTest {
+/** REQ-11/12 reminders, delivered as push notifications to the recipients' phones (Q-24). */
+class ReminderNotificationTest extends IntegrationTest {
 
-    private static final String ICAL = "https://ical.booking.com/v1/export?t=sms";
+    private static final String ICAL = "https://ical.booking.com/v1/export?t=reminders";
     private static final ZoneId WARSAW = ZoneId.of("Europe/Warsaw");
-    /** A fixed "today" in the apartment's time zone. */
     private static final LocalDate TODAY = LocalDate.of(2026, 11, 10);
+    private static final String ADMIN_PHONE = "fcm-token-admin";
+    private static final String CLEANER_PHONE = "fcm-token-cleaner";
 
     @Autowired ReminderPlanner planner;
-    @Autowired SmsDispatcher dispatcher;
-    @Autowired SmsNotificationRepository notifications;
-    @Autowired UserRepository users;
+    @Autowired ReminderDispatcher dispatcher;
+    @Autowired ReminderNotificationRepository notifications;
+    @Autowired DeviceTokenRepository devices;
     @Autowired JdbcTemplate jdbc;
 
     private TestUser admin;
@@ -44,7 +47,9 @@ class SmsReminderTest extends IntegrationTest {
         clock.set(TODAY.atTime(8, 0).atZone(WARSAW).toInstant());
         admin = registerUser("admin@example.com");
         cleaner = registerUser("cleaner@example.com");
-        setPhoneAndLanguage(cleaner, "+48700200300", Language.PL);
+        setLanguage(cleaner, Language.PL);
+        registerDevice(admin, ADMIN_PHONE);
+        registerDevice(cleaner, CLEANER_PHONE);
         apartment = createApartment(admin, ICAL);
         addCleaningService(apartment, cleaner);
     }
@@ -55,28 +60,43 @@ class SmsReminderTest extends IntegrationTest {
         settings("18:00", null);
 
         runAt(17, 59);
-        assertThat(smsSender.sent()).isEmpty();
+        assertThat(pushSender.sent()).isEmpty();
 
         runAt(18, 0);
-        List<Sms> sent = smsSender.sent();
-        assertThat(sent).extracting(Sms::phoneNumber).containsExactlyInAnyOrder("+48600100200", "+48700200300");
-        assertThat(textFor("+48600100200")).contains("Sunny flat").contains("Nov 11, 2026").contains("not planned");
-        assertThat(textFor("+48700200300")).contains("Sunny flat").contains("11 lis 2026").contains("nie jest");
+        assertThat(pushSender.sent()).extracting(Push::deviceToken).containsExactlyInAnyOrder(ADMIN_PHONE, CLEANER_PHONE);
+        Push toAdmin = pushTo(ADMIN_PHONE);
+        assertThat(toAdmin.title()).contains("cleaning reminder");
+        assertThat(toAdmin.body()).contains("Sunny flat").contains("Nov 11, 2026").contains("not planned");
+        Push toCleaner = pushTo(CLEANER_PHONE);
+        assertThat(toCleaner.title()).contains("przypomnienie");
+        assertThat(toCleaner.body()).contains("Sunny flat").contains("11 lis 2026").contains("nie jest");
     }
 
     @Test
-    void REQ11_oneSmsPerRecipientPerReservationPerDayEvenAfterRestart() throws Exception {
+    void REQ11_oneReminderPerRecipientPerReservationPerDayEvenAfterRestart() throws Exception {
         importStays(stay("tomorrow", -2, 1));
         settings("18:00", null);
 
         runAt(18, 0);
         runAt(18, 1);
         runAt(18, 30);
-        // A "restart": fresh planner run in the same window.
         planner.planDue();
         dispatcher.dispatchDue();
 
-        assertThat(smsSender.sent()).hasSize(2);
+        assertThat(pushSender.sent()).hasSize(2);
+        assertThat(notifications.count()).isEqualTo(2);
+    }
+
+    @Test
+    void REQ11_everyPhoneOfARecipientGetsIt() throws Exception {
+        registerDevice(admin, "fcm-token-admin-tablet");
+        importStays(stay("tomorrow", -2, 1));
+        settings("18:00", null);
+
+        runAt(18, 0);
+
+        assertThat(pushSender.sent()).extracting(Push::deviceToken)
+                .containsExactlyInAnyOrder(ADMIN_PHONE, "fcm-token-admin-tablet", CLEANER_PHONE);
         assertThat(notifications.count()).isEqualTo(2);
     }
 
@@ -89,7 +109,7 @@ class SmsReminderTest extends IntegrationTest {
 
         runAt(18, 0);
 
-        assertThat(smsSender.sent()).hasSize(2);
+        assertThat(pushSender.sent()).hasSize(2);
     }
 
     @Test
@@ -99,7 +119,7 @@ class SmsReminderTest extends IntegrationTest {
 
         runAt(18, 0);
 
-        assertThat(smsSender.sent()).isEmpty();
+        assertThat(pushSender.sent()).isEmpty();
     }
 
     @Test
@@ -108,13 +128,13 @@ class SmsReminderTest extends IntegrationTest {
         settings("18:00", null);
 
         runAt(19, 1);
-        assertThat(smsSender.sent()).as("more than an hour late – skipped").isEmpty();
+        assertThat(pushSender.sent()).as("more than an hour late – skipped").isEmpty();
 
         // Back to the morning only so the test's login token (1 h, same clock) is valid for the settings call.
         clock.set(TODAY.atTime(8, 0).atZone(WARSAW).toInstant());
         settings("18:45", null);
         runAt(19, 5);
-        assertThat(smsSender.sent()).as("20 minutes late – still sent").hasSize(2);
+        assertThat(pushSender.sent()).as("20 minutes late – still sent").hasSize(2);
     }
 
     @Test
@@ -129,8 +149,8 @@ class SmsReminderTest extends IntegrationTest {
 
         runAt(11, 0);
 
-        assertThat(smsSender.sent()).hasSize(4);
-        assertThat(textFor("+48600100200")).contains("not done").contains("Nov 10, 2026");
+        assertThat(pushSender.sent()).hasSize(4);
+        assertThat(pushTo(ADMIN_PHONE).body()).contains("not done").contains("Nov 10, 2026");
     }
 
     @Test
@@ -141,21 +161,21 @@ class SmsReminderTest extends IntegrationTest {
         clock.set(TODAY.atTime(10, 30).atZone(ZoneId.of("UTC")).toInstant()); // 11:30 in Warsaw (CET)
         planner.planDue();
         dispatcher.dispatchDue();
-        assertThat(smsSender.sent()).as("11:00 Warsaw has passed at 10:30 UTC").hasSize(2);
+        assertThat(pushSender.sent()).as("11:00 Warsaw has passed at 10:30 UTC").hasSize(2);
 
-        smsSender.reset();
-        jdbc.update("delete from sms_notification");
+        pushSender.reset();
+        jdbc.update("delete from reminder_notification");
         clock.set(TODAY.atTime(9, 30).atZone(ZoneId.of("UTC")).toInstant()); // 10:30 in Warsaw
         planner.planDue();
         dispatcher.dispatchDue();
-        assertThat(smsSender.sent()).as("10:30 Warsaw is before 11:00").isEmpty();
+        assertThat(pushSender.sent()).as("10:30 Warsaw is before 11:00").isEmpty();
     }
 
     @Test
     void REQ13_failedSendIsRetriedAtMostThreeTimes() throws Exception {
         importStays(stay("tomorrow", -2, 1));
         settings("18:00", null);
-        smsSender.failNext(100);
+        pushSender.failNext(100);
 
         runAt(18, 0);
         for (int seconds : new int[] {2, 6, 14, 30, 60}) {
@@ -163,10 +183,10 @@ class SmsReminderTest extends IntegrationTest {
             dispatcher.dispatchDue();
         }
 
-        assertThat(smsSender.attempts()).as("2 recipients x (1 attempt + 3 retries)").isEqualTo(8);
+        assertThat(pushSender.attempts()).as("2 recipients x (1 attempt + 3 retries)").isEqualTo(8);
         assertThat(notifications.findAll()).allSatisfy(n -> {
-            assertThat(n.getStatus()).isEqualTo(SmsNotification.Status.FAILED);
-            assertThat(n.getAttempts()).isEqualTo(SmsNotification.MAX_ATTEMPTS);
+            assertThat(n.getStatus()).isEqualTo(ReminderNotification.Status.FAILED);
+            assertThat(n.getAttempts()).isEqualTo(ReminderNotification.MAX_ATTEMPTS);
         });
     }
 
@@ -174,15 +194,30 @@ class SmsReminderTest extends IntegrationTest {
     void REQ13_temporaryFailureIsSentOnRetry() throws Exception {
         importStays(stay("tomorrow", -2, 1));
         settings("18:00", null);
-        smsSender.failNext(1);
+        pushSender.failNext(1);
 
         runAt(18, 0);
-        assertThat(smsSender.sent()).hasSize(1);
+        assertThat(pushSender.sent()).hasSize(1);
         clock.set(TODAY.atTime(18, 0).atZone(WARSAW).toInstant().plusSeconds(3));
         dispatcher.dispatchDue();
 
-        assertThat(smsSender.sent()).hasSize(2);
-        assertThat(notifications.findAll()).allSatisfy(n -> assertThat(n.getStatus()).isEqualTo(SmsNotification.Status.SENT));
+        assertThat(pushSender.sent()).hasSize(2);
+        assertThat(notifications.findAll())
+                .allSatisfy(n -> assertThat(n.getStatus()).isEqualTo(ReminderNotification.Status.SENT));
+    }
+
+    @Test
+    void REQ13_invalidDeviceTokenIsForgottenAndUserWithoutPhoneIsNotRetried() throws Exception {
+        pushSender.markInvalid(CLEANER_PHONE);
+        importStays(stay("tomorrow", -2, 1));
+        settings("18:00", null);
+
+        runAt(18, 0);
+
+        assertThat(pushSender.sent()).extracting(Push::deviceToken).containsExactly(ADMIN_PHONE);
+        assertThat(devices.findByToken(CLEANER_PHONE)).isEmpty();
+        assertThat(notifications.findAll()).extracting(ReminderNotification::getStatus)
+                .containsExactlyInAnyOrder(ReminderNotification.Status.SENT, ReminderNotification.Status.NO_DEVICE);
     }
 
     @Test
@@ -194,8 +229,8 @@ class SmsReminderTest extends IntegrationTest {
 
         call(admin, put(url), Map.of("notPlannedTime", "18:30", "notDoneTime", "07:05")).andExpect(status().isOk());
         call(admin, get(url), null)
-                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath("$.notPlannedTime").value("18:30"))
-                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath("$.notDoneTime").value("07:05"));
+                .andExpect(jsonPath("$.notPlannedTime").value("18:30"))
+                .andExpect(jsonPath("$.notDoneTime").value("07:05"));
     }
 
     private static String importUrl(long apartment) {
@@ -234,12 +269,17 @@ class SmsReminderTest extends IntegrationTest {
                 .andExpect(status().isOk());
     }
 
-    private void setPhoneAndLanguage(TestUser user, String phone, Language language) throws Exception {
-        call(user, put("/api/users/me"), Map.of("phoneNumber", phone, "language", language.name()))
+    private void setLanguage(TestUser user, Language language) throws Exception {
+        call(user, put("/api/users/me"), Map.of("phoneNumber", "+48700200300", "language", language.name()))
                 .andExpect(status().isOk());
     }
 
-    private String textFor(String phone) {
-        return smsSender.sent().stream().filter(s -> s.phoneNumber().equals(phone)).findFirst().orElseThrow().text();
+    private void registerDevice(TestUser user, String token) throws Exception {
+        call(user, post("/api/users/me/devices"), Map.of("token", token)).andExpect(status().isNoContent());
+    }
+
+    private Push pushTo(String token) {
+        List<Push> sent = pushSender.sent();
+        return sent.stream().filter(p -> p.deviceToken().equals(token)).findFirst().orElseThrow();
     }
 }

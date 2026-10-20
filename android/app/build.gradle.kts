@@ -3,6 +3,12 @@ plugins {
     alias(libs.plugins.hilt)
 }
 
+// Q-24: push notifications need the Firebase config of the owner's project. Without the file the app still builds
+// and works, just without notifications (see CLAUDE.md "Push notifications").
+if (file("google-services.json").exists()) {
+    apply(plugin = "com.google.gms.google-services")
+}
+
 // NFR-02: release builds talk HTTPS only. Override with -PbookmanApiUrl=https://... once hosting exists (Q-06).
 val releaseApiUrl = (findProperty("bookmanApiUrl") as String?) ?: "https://bookman.invalid/"
 
@@ -64,6 +70,8 @@ dependencies {
     implementation(libs.retrofit)
     implementation(libs.retrofit.gson)
     implementation(libs.okhttp.logging)
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.messaging)
 
     testImplementation(libs.junit)
     testImplementation(libs.androidx.core.testing)

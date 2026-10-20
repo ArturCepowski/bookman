@@ -4,6 +4,7 @@ import com.bookman.app.BuildConfig;
 import com.bookman.app.data.api.ApartmentApi;
 import com.bookman.app.data.api.AuthApi;
 import com.bookman.app.data.api.AuthInterceptor;
+import com.bookman.app.data.api.DeviceApi;
 import com.bookman.app.data.api.MemberApi;
 import com.bookman.app.data.api.ReservationApi;
 import com.bookman.app.data.api.UserApi;
@@ -79,5 +80,11 @@ public final class NetworkModule {
     @Singleton
     static MemberApi memberApi(Retrofit retrofit) {
         return retrofit.create(MemberApi.class);
+    }
+
+    @Provides
+    @Singleton
+    static DeviceApi deviceApi(Retrofit retrofit) {
+        return retrofit.create(DeviceApi.class);
     }
 }

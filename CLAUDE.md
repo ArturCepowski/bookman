@@ -35,7 +35,7 @@
 - PostgreSQL 16, schema migrations with Flyway.
 - Spring Security with JWT (stateless API).
 - Scheduling with Spring `@Scheduled` (or Quartz if persistence of jobs is required).
-- External integrations behind interfaces (e.g. `ReservationSource`, `SmsSender`) so they can be replaced and mocked.
+- External integrations behind interfaces (e.g. `ReservationSource`, `PushSender`) so they can be replaced and mocked.
 
 ## Testing and definition of done
 A stage is done only when:
@@ -48,7 +48,7 @@ A stage is done only when:
 Notes:
 - There is no Android emulator in the cloud environment. Do not try to start one.
   Verify Android logic with JVM unit tests (Robolectric is allowed); UI is verified manually by the owner.
-- External services (Booking.com, SMS provider) must never be called from tests – use fakes.
+- External services (Booking.com, Firebase Cloud Messaging) must never be called from tests – use fakes.
 
 ## Code conventions
 - Small, focused classes; no business logic in Activities/Fragments or REST controllers.
@@ -72,8 +72,8 @@ Notes:
 - `BOOKMAN_JWT_SECRET` – **required**, at least 32 bytes (generate once: `openssl rand -base64 48`)
 - `BOOKMAN_JWT_TTL` – session length, default `30d`
 - `BOOKMAN_IMPORT_INTERVAL` – reservation import interval, default `PT30M`
-- `BOOKMAN_SMS_PROVIDER` – `log` (default, SMS only written to the log) or `smsapi`;
-  with `smsapi`: `BOOKMAN_SMSAPI_TOKEN` (**secret**), optional `BOOKMAN_SMSAPI_SENDER`
+- `BOOKMAN_PUSH_PROVIDER` – `log` (default, reminders only written to the log) or `fcm`;
+  with `fcm`: `BOOKMAN_FCM_CREDENTIALS` = path to the Firebase service-account JSON (**secret**, outside the repo)
 - Local setup: `cp backend/.env.example backend/.env`, fill in `BOOKMAN_JWT_SECRET` (plain `KEY=VALUE`, no quotes).
   `backend/.env` is git-ignored; real environment variables override it. Production uses real env vars only.
 - Run locally: `cd backend && ./gradlew bootRun`
@@ -84,6 +84,15 @@ Notes:
 - AWS RDS PostgreSQL 16 (db.t4g.micro)
 - Endpoint: set via environment variable (e.g., `DATABASE_URL`)
 - See Q-06 in `docs/questions.md` for details
+
+### Push notifications (Firebase Cloud Messaging, Q-24)
+1. Create a project at https://console.firebase.google.com (free) and add an **Android app** with package
+   `com.bookman.app`.
+2. Download `google-services.json` into `android/app/` (git-ignored). Without it the app still builds, just without
+   notifications.
+3. Backend: Project settings → Service accounts → *Generate new private key*; store the JSON outside the repository and
+   set `BOOKMAN_PUSH_PROVIDER=fcm` and `BOOKMAN_FCM_CREDENTIALS=<path to the JSON>`.
+4. Test on an emulator image **with Google Play** and allow notifications when the app asks.
 
 **Migrations:**
 - Flyway runs automatically on backend startup

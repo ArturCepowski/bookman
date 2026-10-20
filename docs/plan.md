@@ -242,52 +242,62 @@ invite an e-mail without an account, then register with it → invitation appear
 
 ---
 
-## Stage 5: Notifications and SMS reminders
+## Stage 5: Reminders (push notifications)
 
 **Status:** ✅ Done
-**Objective:** SMS reminders are sent for unplanned and unfinished cleanings.
+**Objective:** Phones of the admin and the cleaning service are reminded about unplanned and unfinished cleanings.
+**Owner decision Q-24:** reminders are push notifications to the Bookman app (Firebase Cloud Messaging), not SMS.
 
 ### Requirements implemented
-- **REQ-11:** "Not planned" SMS – check-out tomorrow, status `NOT_PLANNED`
-- **REQ-12:** "Not done" SMS – check-out today, status not `DONE` (and not `PRIVATE`, Q-20)
-- **REQ-13:** SMS sending through `SmsSender` (development logger, production provider via env vars, 3 retries)
-- **REQ-14 (part):** SMS text in each recipient's profile language
+- **REQ-11:** "Not planned" reminder – check-out tomorrow, status `NOT_PLANNED`
+- **REQ-12:** "Not done" reminder – check-out today, status not `DONE` (and not `PRIVATE`, Q-20)
+- **REQ-13 (as changed by Q-24):** sending through `PushSender` (development logger, FCM via env vars, 3 retries)
+- **REQ-14 (part):** reminder text in each recipient's profile language
 
 ### Implementation checklist
 
 #### Backend
-- [x] Flyway `V6__sms_reminders.sql`: reminder hours on `apartment` (`TIME`, NULL = off) and `sms_notification`
-      (unique `(reservation, recipient, type, day)`, status, attempts, next attempt, last error) – Q-11
+- [x] Flyway `V6__sms_reminders.sql` (reminder hours on `apartment`, `TIME`, NULL = off) and
+      `V7__push_notifications.sql` (`device_token`, `reminder_notification` with unique
+      `(reservation, recipient, type, day)`, status PENDING/SENT/FAILED/NO_DEVICE) – Q-11, Q-24
 - [x] `GET/PUT /api/apartments/{id}/notification-settings` (`"HH:MM"` or null), ADMIN only (REQ-05)
-- [x] `ReminderPlanner` (every minute): for each apartment whose reminder hour has passed (its time zone,
-      within one hour) queues one SMS per recipient (all ADMIN + CLEANING_SERVICE) and reservation;
-      `INSERT … ON CONFLICT DO NOTHING` makes restarts/retries/parallel instances harmless
-- [x] `SmsDispatcher` (every 10 s): sends due rows (`FOR UPDATE SKIP LOCKED`), on failure logs and retries after
-      2 s / 4 s / 8 s, then marks `FAILED` (4 attempts = 1 + 3 retries, Q-10)
-- [x] `SmsSender`: `LoggingSmsSender` (default) and `SmsapiSmsSender` (`BOOKMAN_SMS_PROVIDER=smsapi`,
-      `BOOKMAN_SMSAPI_TOKEN`, optional `BOOKMAN_SMSAPI_SENDER`) – provider assumed until Q-05 is decided
-- [x] Texts in `sms.properties` / `sms_pl.properties`: apartment name + check-out date, recipient's language
+- [x] `POST /api/users/me/devices` and `…/devices/unregister` – the app registers its FCM token after login and
+      removes it on logout; a token belongs to the last user who logged in on that phone
+- [x] `ReminderPlanner` (every minute): due reminders (apartment time zone, within one hour) are queued per recipient
+      and reservation with `INSERT … ON CONFLICT DO NOTHING`
+- [x] `ReminderDispatcher` (every 10 s): sends to all phones of the recipient; on failure logs and retries after
+      2 s / 4 s / 8 s, then `FAILED`; tokens FCM reports as unregistered are deleted; no phone → `NO_DEVICE`
+- [x] `PushSender`: `LoggingPushSender` (default) and `FcmPushSender` (`BOOKMAN_PUSH_PROVIDER=fcm`,
+      `BOOKMAN_FCM_CREDENTIALS` = path to the service-account JSON)
+- [x] Texts in `reminders.properties` / `reminders_pl.properties` (title + apartment name + check-out date)
 
 #### Android
-- [x] Apartment details (admin) → ⋮ **SMS reminders**: two switches with 24 h time pickers, save
+- [x] Firebase Messaging; `google-services.json` is optional and git-ignored – without it the app builds and runs
+      without notifications (see CLAUDE.md "Push notifications")
+- [x] `PushRegistrar`: registers the token after login, on app start and on token rotation; unregisters on logout
+- [x] Notification channel "Cleaning reminders", notifications also shown while the app is open, Android 13+
+      notification permission requested once on the apartment list
+- [x] Apartment details (admin) → ⋮ **Cleaning reminders**: two switches with 24 h time pickers
 
 ### Acceptance criteria verification
 | Criterion | Verified by |
 |---|---|
-| REQ-11 at the set hour, check-out tomorrow, NOT_PLANNED, to all recipients | `SmsReminderTest.REQ11_notPlannedReminderAtConfiguredHourForTomorrowsCheckOut`, `…REQ11_onlyNotPlannedReservationsAreReminded`; live `bootRun` check (scheduler + logger) |
-| REQ-11/12 one SMS per recipient per reservation per day (retry/restart) | `SmsReminderTest.REQ11_oneSmsPerRecipientPerReservationPerDayEvenAfterRestart` |
-| REQ-11/12 SMS contains apartment name and check-out date | `SmsReminderTest.REQ11_notPlannedReminder…`, `…REQ12_notDoneReminder…` |
-| REQ-11/12 can be disabled; settings admin-only | `SmsReminderTest.REQ11_disabledReminderSendsNothing`, `…REQ11_settingsAreAdminOnlyAndValidated`, `NotificationSettingsViewModelTest.REQ1*` |
-| REQ-12 check-out today, not DONE | `SmsReminderTest.REQ12_notDoneReminderForTodaysCheckOutUnlessDoneOrPrivate` |
-| REQ-11/12 in the apartment's time zone | `SmsReminderTest.REQ12_hourIsInTheApartmentsTimeZone`, `…REQ11_missedHourIsCaughtUpWithinOneHourOnly` |
-| REQ-13 development implementation logs | `SmsSenderConfigTest.REQ13_developmentDefaultOnlyLogs` |
-| REQ-13 production provider via env vars | `SmsSenderConfigTest.REQ13_productionProviderIsSelectedByEnvironment`, `SmsapiSmsSenderTest.REQ13_*` (local stand-in server) |
-| REQ-13 failures logged and retried at most 3 times | `SmsReminderTest.REQ13_failedSendIsRetriedAtMostThreeTimes`, `…REQ13_temporaryFailureIsSentOnRetry` |
-| REQ-14 SMS in the recipient's language | `SmsReminderTest.REQ11_notPlannedReminder…` (EN and PL recipient) |
+| REQ-11 at the set hour, check-out tomorrow, NOT_PLANNED, to all recipients' phones | `ReminderNotificationTest.REQ11_notPlannedReminderAtConfiguredHourForTomorrowsCheckOut`, `…REQ11_everyPhoneOfARecipientGetsIt`, `…REQ11_onlyNotPlannedReservationsAreReminded` |
+| REQ-11/12 one per recipient per reservation per day (retry/restart) | `ReminderNotificationTest.REQ11_oneReminderPerRecipientPerReservationPerDayEvenAfterRestart` |
+| REQ-11/12 contains apartment name and check-out date | `ReminderNotificationTest.REQ11_notPlannedReminder…`, `…REQ12_notDoneReminder…` |
+| REQ-11/12 can be disabled; settings admin-only | `ReminderNotificationTest.REQ11_disabledReminderSendsNothing`, `…REQ11_settingsAreAdminOnlyAndValidated`, `NotificationSettingsViewModelTest.*` |
+| REQ-12 check-out today, not DONE | `ReminderNotificationTest.REQ12_notDoneReminderForTodaysCheckOutUnlessDoneOrPrivate` |
+| REQ-11/12 in the apartment's time zone | `ReminderNotificationTest.REQ12_hourIsInTheApartmentsTimeZone`, `…REQ11_missedHourIsCaughtUpWithinOneHourOnly` |
+| Phones registered per logged-in user (Q-24) | `DeviceApiTest.REQ11_*`, `PushRegistrarTest.REQ11_*`, `DeviceRepositoryImplTest.REQ11_*`, `AuthRepositoryImplTest.REQ11_loginAndLogoutNotifyPushRegistration` |
+| REQ-13 development implementation logs | `PushConfigTest.REQ13_developmentDefaultOnlyLogs` |
+| REQ-13 production provider via env vars | `PushConfigTest.REQ13_fcmWithoutCredentialsFailsFastAtStartup`, `FcmPushSenderTest.REQ13_*` (local stand-in for FCM) |
+| REQ-13 failures logged and retried at most 3 times | `ReminderNotificationTest.REQ13_failedSendIsRetriedAtMostThreeTimes`, `…REQ13_temporaryFailureIsSentOnRetry`, `…REQ13_invalidDeviceTokenIsForgottenAndUserWithoutPhoneIsNotRetried` |
+| REQ-14 reminder in the recipient's language | `ReminderNotificationTest.REQ11_notPlannedReminder…` (EN and PL recipient) |
 
-Commands: `cd backend && ./gradlew build` (93 tests), `cd android && ./gradlew assembleDebug testDebugUnitTest lint` (75 tests, lint clean).
-Manual (owner): set the "not planned" reminder to the next minute for an apartment with a check-out tomorrow →
-the backend log shows `SMS (not sent, development mode) to … `. Real SMS only after choosing a provider (Q-05).
+Commands: `cd backend && ./gradlew build` (98 tests), `cd android && ./gradlew assembleDebug testDebugUnitTest lint` (83 tests, lint clean; also builds with a `google-services.json`).
+Manual (owner): set up Firebase (CLAUDE.md "Push notifications"), run backend with `BOOKMAN_PUSH_PROVIDER=fcm`,
+log in on the emulator (Google Play image), allow notifications, set a reminder to the next minute → notification.
+Without Firebase: the backend log shows `Push (not sent, development mode) …`.
 
 ---
 

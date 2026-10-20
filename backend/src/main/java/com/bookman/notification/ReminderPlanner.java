@@ -18,7 +18,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * REQ-11 / REQ-12: at the configured hour (apartment time zone) queues one SMS per recipient and reservation.
+ * REQ-11 / REQ-12: at the configured hour (apartment time zone) queues one reminder per recipient and reservation;
+ * delivered as a push notification to the recipient's phones (owner decision Q-24, instead of SMS).
  * ASSUMPTION(REQ-11): a reminder is still sent if the backend was down at that exact minute, as long as it comes
  * back within an hour (Q-23); later it is skipped for that day rather than arriving at an odd time.
  */
@@ -30,12 +31,13 @@ public class ReminderPlanner {
     private final ApartmentRepository apartments;
     private final ApartmentMemberRepository members;
     private final ReservationRepository reservations;
-    private final SmsNotificationRepository notifications;
-    private final SmsTexts texts;
+    private final ReminderNotificationRepository notifications;
+    private final ReminderTexts texts;
     private final Clock clock;
 
     public ReminderPlanner(ApartmentRepository apartments, ApartmentMemberRepository members,
-            ReservationRepository reservations, SmsNotificationRepository notifications, SmsTexts texts, Clock clock) {
+            ReservationRepository reservations, ReminderNotificationRepository notifications, ReminderTexts texts,
+            Clock clock) {
         this.apartments = apartments;
         this.members = members;
         this.reservations = reservations;
@@ -44,7 +46,7 @@ public class ReminderPlanner {
         this.clock = clock;
     }
 
-    /** @return number of newly queued SMS */
+    /** @return number of newly queued reminders */
     @Transactional
     public int planDue() {
         Instant now = clock.instant();
@@ -83,9 +85,9 @@ public class ReminderPlanner {
         int queued = 0;
         for (Reservation reservation : due) {
             for (User recipient : recipients) {
-                String text = texts.reminder(type, apartment.getName(), reservation.getCheckOut(), recipient.getLanguage());
+                String body = texts.body(type, apartment.getName(), reservation.getCheckOut(), recipient.getLanguage());
                 queued += notifications.insertIfAbsent(reservation.getId(), recipient.getId(), type.name(), day,
-                        recipient.getPhoneNumber(), text, now);
+                        texts.title(recipient.getLanguage()), body, now);
             }
         }
         return queued;

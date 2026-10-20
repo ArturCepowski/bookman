@@ -5,7 +5,7 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 
-/** Real time by default; tests that care about "now" (SMS hours) set it explicitly. */
+/** Real time by default; tests that care about "now" (reminder hours) set it explicitly. */
 public class MutableClock extends Clock {
 
     private volatile Instant fixed;

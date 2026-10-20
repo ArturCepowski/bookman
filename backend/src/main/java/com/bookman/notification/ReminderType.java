@@ -6,9 +6,9 @@ import java.util.Set;
 
 public enum ReminderType {
     /** REQ-11: check-out tomorrow, still NOT_PLANNED. */
-    NOT_PLANNED(1, EnumSet.of(CleaningStatus.NOT_PLANNED), "sms.not-planned"),
+    NOT_PLANNED(1, EnumSet.of(CleaningStatus.NOT_PLANNED), "reminder.not-planned"),
     /** REQ-12: check-out today, not DONE. PRIVATE is excluded – no cleaning is needed (Q-20). */
-    NOT_DONE(0, EnumSet.of(CleaningStatus.NOT_PLANNED, CleaningStatus.TAKEN), "sms.not-done");
+    NOT_DONE(0, EnumSet.of(CleaningStatus.NOT_PLANNED, CleaningStatus.TAKEN), "reminder.not-done");
 
     final int checkOutInDays;
     final Set<CleaningStatus> statuses;

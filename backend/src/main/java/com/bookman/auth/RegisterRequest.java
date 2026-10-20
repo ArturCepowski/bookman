@@ -13,6 +13,6 @@ public record RegisterRequest(
         @NotBlank @Size(min = 8, max = 72) String password,
         @NotBlank @Pattern(regexp = PhoneNumbers.E164, message = "must be in E.164 format, e.g. +48600100200")
         String phoneNumber,
-        // REQ-14: the app sends its current (system-derived) language so SMS texts match from day one.
+        // REQ-14: the app sends its current (system-derived) language so reminder texts match from day one.
         @NotNull Language language) {
 }
