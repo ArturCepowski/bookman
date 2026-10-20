@@ -23,4 +23,12 @@ public interface ApartmentMemberRepository extends JpaRepository<ApartmentMember
             order by case when m.role = com.bookman.apartment.Role.ADMIN then 0 else 1 end, u.email
             """)
     List<MemberView> findMembers(@Param("apartmentId") long apartmentId);
+
+    /** REQ-11/12 recipients: every ADMIN and CLEANING_SERVICE user of the apartment. */
+    @Query("""
+            select u from ApartmentMember m, com.bookman.user.User u
+            where u.id = m.id.userId and m.id.apartmentId = :apartmentId
+            order by u.id
+            """)
+    List<com.bookman.user.User> findMemberUsers(@Param("apartmentId") long apartmentId);
 }

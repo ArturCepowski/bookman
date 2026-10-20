@@ -6,3 +6,6 @@ bookman:
   import:
     # Tests trigger imports explicitly; the background schedule would make them nondeterministic.
     scheduler-enabled: false
+  sms:
+    # Tests run the planner and dispatcher explicitly.
+    scheduler-enabled: false

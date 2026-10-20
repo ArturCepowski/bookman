@@ -208,10 +208,26 @@ app UI language immediately is part of Stage 6 (REQ-14); until then the UI follo
 - The admin cannot be removed (spec 6: single admin, no transfer). A removed cleaning service member keeps being shown
   as "taken by" on reservations they took earlier (history is not rewritten).
 
+### Q-23 (REQ-11, REQ-12, REQ-13): Reminder details
+**Status:** OPEN – implemented with assumptions, please confirm
+
+- Reminders are **off** until the admin sets an hour (the spec gives no default). `ASSUMPTION(REQ-11)`
+- If the backend is down at the reminder minute, the SMS is still sent when it comes back **within one hour**;
+  later than that it is skipped for that day. `ASSUMPTION(REQ-11)`
+- Delivery is "at least once": if the server crashes exactly between the provider accepting an SMS and the database
+  recording it, that one SMS may be sent twice. Everything else (retries, restarts, a second scheduler run) is
+  deduplicated by the database.
+- Polish texts contain diacritics, so they are sent as Unicode SMS (70 characters per part instead of 160). If cost
+  matters, the texts can be written without diacritics.
+- A reservation of an apartment with no recipients' phone numbers is impossible today (phone is required, REQ-01).
+
 ## External/Product decisions (not blocking implementation)
 
 These answers are assumed in the spec but require external decision:
 
 - **Q-05 SMS provider:** Which provider (e.g., SMSAPI.pl, Twilio) and who pays for SMS?
+  `ASSUMPTION(REQ-13)`: SMSAPI.pl is implemented (`BOOKMAN_SMS_PROVIDER=smsapi`, `BOOKMAN_SMSAPI_TOKEN`,
+  `BOOKMAN_SMSAPI_SENDER`); it needs a paid, prepaid account. Default is the logging sender – no account needed for
+  development. Another provider = one more `SmsSender` implementation.
 - **Q-07 Invitations by e-mail:** Should invitations trigger email notifications, or is in-app enough? (v1: in-app only, see Q-22)
 - **Q-01 Booking.com integration:** Is iCal information (dates only, no guest data) sufficient for v1?

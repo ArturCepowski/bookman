@@ -25,4 +25,10 @@ public interface ApartmentApi {
 
     @DELETE("api/apartments/{id}")
     Call<Void> delete(@Path("id") long id);
+
+    @GET("api/apartments/{id}/notification-settings")
+    Call<NotificationSettingsDto> notificationSettings(@Path("id") long id);
+
+    @PUT("api/apartments/{id}/notification-settings")
+    Call<NotificationSettingsDto> updateNotificationSettings(@Path("id") long id, @Body NotificationSettingsDto body);
 }

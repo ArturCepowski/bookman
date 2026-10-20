@@ -6,6 +6,7 @@ import com.bookman.app.data.apartment.ApartmentDetails;
 import com.bookman.app.data.apartment.ApartmentInput;
 import com.bookman.app.data.apartment.ApartmentRepository;
 import com.bookman.app.data.apartment.ApartmentSummary;
+import com.bookman.app.data.apartment.NotificationSettings;
 import com.bookman.app.data.apartment.Role;
 import java.util.ArrayList;
 import java.util.List;
@@ -19,6 +20,8 @@ public class FakeApartmentRepository implements ApartmentRepository {
     public Long lastUpdatedId;
     public Long lastDeletedId;
     public int creates;
+    public Result<NotificationSettings> settingsResult = Result.success(new NotificationSettings(null, null));
+    public NotificationSettings lastSavedSettings;
 
     public static ApartmentDetails details(Role role) {
         return new ApartmentDetails(5, "Sunny flat", "https://www.booking.com/hotel/pl/sunny.html",
@@ -53,5 +56,17 @@ public class FakeApartmentRepository implements ApartmentRepository {
     public void delete(long id, Consumer<Result<Boolean>> callback) {
         lastDeletedId = id;
         callback.accept(deleteResult);
+    }
+
+    @Override
+    public void notificationSettings(long id, Consumer<Result<NotificationSettings>> callback) {
+        callback.accept(settingsResult);
+    }
+
+    @Override
+    public void updateNotificationSettings(long id, NotificationSettings settings,
+            Consumer<Result<NotificationSettings>> callback) {
+        lastSavedSettings = settings;
+        callback.accept(Result.success(settings));
     }
 }

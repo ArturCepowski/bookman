@@ -71,6 +71,9 @@ Notes:
   (`jdbc:postgresql://localhost:5432/bookman`, `bookman` / `bookman_dev_password`)
 - `BOOKMAN_JWT_SECRET` – **required**, at least 32 bytes (generate once: `openssl rand -base64 48`)
 - `BOOKMAN_JWT_TTL` – session length, default `30d`
+- `BOOKMAN_IMPORT_INTERVAL` – reservation import interval, default `PT30M`
+- `BOOKMAN_SMS_PROVIDER` – `log` (default, SMS only written to the log) or `smsapi`;
+  with `smsapi`: `BOOKMAN_SMSAPI_TOKEN` (**secret**), optional `BOOKMAN_SMSAPI_SENDER`
 - Local setup: `cp backend/.env.example backend/.env`, fill in `BOOKMAN_JWT_SECRET` (plain `KEY=VALUE`, no quotes).
   `backend/.env` is git-ignored; real environment variables override it. Production uses real env vars only.
 - Run locally: `cd backend && ./gradlew bootRun`

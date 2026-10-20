@@ -99,6 +99,27 @@ public class ApartmentRepositoryImplTest {
         assertNull(ref.get().value().icalUrl);
     }
 
+    @Test
+    public void REQ11_notificationSettingsRoundTripAsHourAndMinute() throws Exception {
+        server.enqueue(json(200, "{\"notPlannedTime\":\"18:30\"}"));
+        server.enqueue(json(200, "{\"notDoneTime\":\"07:05\"}"));
+        AtomicReference<Result<NotificationSettings>> ref = new AtomicReference<>();
+
+        repository.notificationSettings(5, ref::set);
+        assertEquals(java.time.LocalTime.of(18, 30), ref.get().value().notPlannedTime);
+        assertNull(ref.get().value().notDoneTime);
+
+        repository.updateNotificationSettings(5, new NotificationSettings(null, java.time.LocalTime.of(7, 5)), ref::set);
+        assertEquals(java.time.LocalTime.of(7, 5), ref.get().value().notDoneTime);
+        server.takeRequest();
+        RecordedRequest put = server.takeRequest();
+        assertEquals("PUT", put.getMethod());
+        assertEquals("/api/apartments/5/notification-settings", put.getPath());
+        String body = put.getBody().readUtf8();
+        assertTrue(body.contains("\"notDoneTime\":\"07:05\""));
+        assertTrue(!body.contains("notPlannedTime"));
+    }
+
     private static MockResponse json(int code, String body) {
         return new MockResponse().setResponseCode(code).setHeader("Content-Type", "application/json").setBody(body);
     }

@@ -1,6 +1,6 @@
 # Bookman – Implementation Plan
 
-**Project Status:** Stages 1–4 done  
+**Project Status:** Stages 1–5 done  
 **Last updated:** 2026-10-20
 
 ---
@@ -244,42 +244,50 @@ invite an e-mail without an account, then register with it → invitation appear
 
 ## Stage 5: Notifications and SMS reminders
 
-**Objective:** SMS reminders are sent for upcoming and unfinished cleaning.
+**Status:** ✅ Done
+**Objective:** SMS reminders are sent for unplanned and unfinished cleanings.
 
 ### Requirements implemented
-- **REQ-11:** "Not planned" SMS (check-out = tomorrow, status = NOT_PLANNED)
-- **REQ-12:** "Not done" SMS (check-out = today, status ≠ DONE)
-- **REQ-13:** SMS sending (interface-based, dev logs, production provider via env vars)
+- **REQ-11:** "Not planned" SMS – check-out tomorrow, status `NOT_PLANNED`
+- **REQ-12:** "Not done" SMS – check-out today, status not `DONE` (and not `PRIVATE`, Q-20)
+- **REQ-13:** SMS sending through `SmsSender` (development logger, production provider via env vars, 3 retries)
+- **REQ-14 (part):** SMS text in each recipient's profile language
 
 ### Implementation checklist
 
 #### Backend
-- [ ] `SmsSender` interface (dev and production implementations)
-- [ ] SMS provider configuration (environment variables for API key, account)
-- [ ] `SmsLog` entity (apartment_id, reservation_id, recipient_id, reminder_type, sent_at)
-- [ ] `@Scheduled` jobs for REQ-11 and REQ-12 (run at configured times)
-- [ ] Idempotency check: don't send duplicate SMS same day (check SmsLog)
-- [ ] Retry mechanism: up to 3 retries on failure with exponential backoff
-- [ ] SMS templates with apartment name and check-out date
-- [ ] Localization: SMS text in user's language (from user profile)
-- [ ] `GET /apartments/{id}/notification-settings` endpoint (read)
-- [ ] `PUT /apartments/{id}/notification-settings` endpoint (update times, ADMIN only)
-- [ ] Flyway migration: create SmsLog, NotificationSettings tables
-- [ ] Tests for reminder scheduling, idempotency, retries, localization
+- [x] Flyway `V6__sms_reminders.sql`: reminder hours on `apartment` (`TIME`, NULL = off) and `sms_notification`
+      (unique `(reservation, recipient, type, day)`, status, attempts, next attempt, last error) – Q-11
+- [x] `GET/PUT /api/apartments/{id}/notification-settings` (`"HH:MM"` or null), ADMIN only (REQ-05)
+- [x] `ReminderPlanner` (every minute): for each apartment whose reminder hour has passed (its time zone,
+      within one hour) queues one SMS per recipient (all ADMIN + CLEANING_SERVICE) and reservation;
+      `INSERT … ON CONFLICT DO NOTHING` makes restarts/retries/parallel instances harmless
+- [x] `SmsDispatcher` (every 10 s): sends due rows (`FOR UPDATE SKIP LOCKED`), on failure logs and retries after
+      2 s / 4 s / 8 s, then marks `FAILED` (4 attempts = 1 + 3 retries, Q-10)
+- [x] `SmsSender`: `LoggingSmsSender` (default) and `SmsapiSmsSender` (`BOOKMAN_SMS_PROVIDER=smsapi`,
+      `BOOKMAN_SMSAPI_TOKEN`, optional `BOOKMAN_SMSAPI_SENDER`) – provider assumed until Q-05 is decided
+- [x] Texts in `sms.properties` / `sms_pl.properties`: apartment name + check-out date, recipient's language
 
 #### Android
-- [ ] Notification settings screen (ADMIN only)
-- [ ] Time picker for REQ-11 and REQ-12 reminder hours
-- [ ] Enable/disable toggles for each reminder type
-- [ ] Display current settings
+- [x] Apartment details (admin) → ⋮ **SMS reminders**: two switches with 24 h time pickers, save
 
 ### Acceptance criteria verification
-- Backend: `cd backend && ./gradlew build` passes
-- Android: `cd android && ./gradlew assembleDebug testDebugUnitTest lint` passes
-- Tests: `REQ11_notPlannedSms`, `REQ12_notDoneSms`, `REQ13_smsSending`, `REQ13_smsRetry`, `REQ13_noSmsDuplicates`
-- Manual: set reminder time, observe logs (dev mode), verify idempotency
+| Criterion | Verified by |
+|---|---|
+| REQ-11 at the set hour, check-out tomorrow, NOT_PLANNED, to all recipients | `SmsReminderTest.REQ11_notPlannedReminderAtConfiguredHourForTomorrowsCheckOut`, `…REQ11_onlyNotPlannedReservationsAreReminded`; live `bootRun` check (scheduler + logger) |
+| REQ-11/12 one SMS per recipient per reservation per day (retry/restart) | `SmsReminderTest.REQ11_oneSmsPerRecipientPerReservationPerDayEvenAfterRestart` |
+| REQ-11/12 SMS contains apartment name and check-out date | `SmsReminderTest.REQ11_notPlannedReminder…`, `…REQ12_notDoneReminder…` |
+| REQ-11/12 can be disabled; settings admin-only | `SmsReminderTest.REQ11_disabledReminderSendsNothing`, `…REQ11_settingsAreAdminOnlyAndValidated`, `NotificationSettingsViewModelTest.REQ1*` |
+| REQ-12 check-out today, not DONE | `SmsReminderTest.REQ12_notDoneReminderForTodaysCheckOutUnlessDoneOrPrivate` |
+| REQ-11/12 in the apartment's time zone | `SmsReminderTest.REQ12_hourIsInTheApartmentsTimeZone`, `…REQ11_missedHourIsCaughtUpWithinOneHourOnly` |
+| REQ-13 development implementation logs | `SmsSenderConfigTest.REQ13_developmentDefaultOnlyLogs` |
+| REQ-13 production provider via env vars | `SmsSenderConfigTest.REQ13_productionProviderIsSelectedByEnvironment`, `SmsapiSmsSenderTest.REQ13_*` (local stand-in server) |
+| REQ-13 failures logged and retried at most 3 times | `SmsReminderTest.REQ13_failedSendIsRetriedAtMostThreeTimes`, `…REQ13_temporaryFailureIsSentOnRetry` |
+| REQ-14 SMS in the recipient's language | `SmsReminderTest.REQ11_notPlannedReminder…` (EN and PL recipient) |
 
-**Assumption (REQ-13):** Retries are deferred with exponential backoff (2s, 4s, 8s) to avoid blocking the scheduler.
+Commands: `cd backend && ./gradlew build` (93 tests), `cd android && ./gradlew assembleDebug testDebugUnitTest lint` (75 tests, lint clean).
+Manual (owner): set the "not planned" reminder to the next minute for an apartment with a check-out tomorrow →
+the backend log shows `SMS (not sent, development mode) to … `. Real SMS only after choosing a provider (Q-05).
 
 ---
 
@@ -363,5 +371,5 @@ After each stage is merged:
 | 2. Apartments | ✅ Done | `claude/hopeful-brahmagupta-3cr7bc-stage2` | [#3](https://github.com/ArturCepowski/bookman/pull/3) |
 | 3. Reservations | ✅ Done | `claude/hopeful-brahmagupta-3cr7bc` | [#4](https://github.com/ArturCepowski/bookman/pull/4) |
 | 4. Invitations | ✅ Done | `claude/hopeful-brahmagupta-3cr7bc` | [#5](https://github.com/ArturCepowski/bookman/pull/5) |
-| 5. Notifications | ⏳ Planned | TBD | TBD |
+| 5. Notifications | ✅ Done | `claude/hopeful-brahmagupta-3cr7bc` | Stage 5 PR |
 | 6. Localization | ⏳ Planned | TBD | TBD |

@@ -15,6 +15,11 @@ spring:
       ddl-auto: validate
   flyway:
     enabled: true
+  messages:
+    # SMS texts (REQ-11/12/14): sms.properties (English) and sms_pl.properties.
+    basename: sms
+    encoding: UTF-8
+    fallback-to-system-locale: false
 
 bookman:
   jwt:
@@ -27,3 +32,13 @@ bookman:
     interval: ${BOOKMAN_IMPORT_INTERVAL:PT30M}
     initial-delay: PT1M
     scheduler-enabled: true
+  sms:
+    # REQ-13: "log" (development, default) or "smsapi" (production, see Q-05).
+    provider: ${BOOKMAN_SMS_PROVIDER:log}
+    scheduler-enabled: true
+    planner-interval: PT1M
+    dispatcher-interval: PT10S
+    smsapi:
+      url: ${BOOKMAN_SMSAPI_URL:https://api.smsapi.pl/sms.do}
+      token: ${BOOKMAN_SMSAPI_TOKEN:}
+      sender: ${BOOKMAN_SMSAPI_SENDER:}

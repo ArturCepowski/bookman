@@ -22,6 +22,18 @@ public class TestBeans {
 
     @Bean
     @Primary
+    FakeSmsSender fakeSmsSender() {
+        return new FakeSmsSender();
+    }
+
+    @Bean
+    @Primary
+    MutableClock mutableClock() {
+        return new MutableClock();
+    }
+
+    @Bean
+    @Primary
     SyncImportRunner syncImportRunner(ReservationImporter importer) {
         return new SyncImportRunner(importer);
     }
