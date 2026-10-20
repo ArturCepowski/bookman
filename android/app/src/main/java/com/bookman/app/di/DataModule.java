@@ -3,12 +3,15 @@ package com.bookman.app.di;
 import android.content.Context;
 import com.bookman.app.data.api.ApartmentApi;
 import com.bookman.app.data.api.AuthApi;
+import com.bookman.app.data.api.MemberApi;
 import com.bookman.app.data.api.ReservationApi;
 import com.bookman.app.data.api.UserApi;
 import com.bookman.app.data.apartment.ApartmentRepository;
 import com.bookman.app.data.apartment.ApartmentRepositoryImpl;
 import com.bookman.app.data.auth.AuthRepository;
 import com.bookman.app.data.auth.AuthRepositoryImpl;
+import com.bookman.app.data.member.MemberRepository;
+import com.bookman.app.data.member.MemberRepositoryImpl;
 import com.bookman.app.data.profile.ProfileRepository;
 import com.bookman.app.data.reservation.ReservationRepository;
 import com.bookman.app.data.reservation.ReservationRepositoryImpl;
@@ -65,5 +68,11 @@ public final class DataModule {
     @Singleton
     static ReservationRepository reservationRepository(ReservationApi api, Executor io) {
         return new ReservationRepositoryImpl(api, io);
+    }
+
+    @Provides
+    @Singleton
+    static MemberRepository memberRepository(MemberApi api, Executor io) {
+        return new MemberRepositoryImpl(api, io);
     }
 }

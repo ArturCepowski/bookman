@@ -1,6 +1,6 @@
 # Bookman – Implementation Plan
 
-**Project Status:** Stages 1–3 done  
+**Project Status:** Stages 1–4 done  
 **Last updated:** 2026-10-20
 
 ---
@@ -193,40 +193,52 @@ Booking.com extranet and pull to refresh to see the new stay (and removal → it
 
 ## Stage 4: Invitations and role management
 
+**Status:** ✅ Done
 **Objective:** Admins can invite cleaning service members and manage their roles.
 
 ### Requirements implemented
-- **REQ-09:** Invite cleaning service by email
-- **REQ-10:** Manage cleaning service members (list, cancel invitation, remove user)
+- **REQ-09:** Invite cleaning service by e-mail (in-app only, Q-07)
+- **REQ-10:** Manage cleaning service members (list, pending invitations, cancel invitation, remove member)
+- **REQ-05 (completed):** deleting an apartment now also removes its pending invitations
+- **REQ-08 (owner decision Q-20):** extra cleaning status `PRIVATE` for dates the owner blocked by hand
 
 ### Implementation checklist
 
 #### Backend
-- [ ] `Invitation` entity (apartment_id, invited_email, created_at, expires_at, accepted/declined)
-- [ ] Invitation expiry: 14 days (scheduled job to mark expired)
-- [ ] `POST /apartments/{id}/invitations` endpoint (ADMIN only)
-- [ ] `GET /apartments/{id}/members` endpoint (list users and pending invitations)
-- [ ] `PATCH /invitations/{id}/accept` endpoint
-- [ ] `PATCH /invitations/{id}/decline` endpoint
-- [ ] `DELETE /apartments/{id}/members/{userId}` endpoint (ADMIN only, cannot remove self)
-- [ ] `DELETE /apartments/{id}/invitations/{id}` endpoint (ADMIN only, cancel invitation)
-- [ ] Validation: cannot invite existing member or self
-- [ ] Flyway migration: create Invitation table
-- [ ] Tests for invitation lifecycle, expiry, authorization
+- [x] Flyway `V4__private_cleaning_status.sql` (Q-20) and `V5__invitations.sql`: `invitation` (normalized e-mail,
+      role, status PENDING/ACCEPTED/DECLINED/CANCELLED/EXPIRED, inviter, `expires_at` = +14 days), partial unique index =
+      one pending invitation per apartment + e-mail (Q-09), cascade from `apartment`
+- [x] `POST /api/apartments/{id}/invitations`, `DELETE …/invitations/{iid}`, `GET …/members`,
+      `DELETE …/members/{userId}` – ADMIN only (403 otherwise)
+- [x] `GET /api/invitations`, `POST /api/invitations/{iid}/accept|decline` – only the user with the invited e-mail
+- [x] Accept = role + invitation closed in one transaction (Q-09); expiry checked on every read (no background job needed)
+- [x] Errors: `ALREADY_MEMBER`, `INVITATION_PENDING`, `INVITATION_EXPIRED`, `CANNOT_REMOVE_ADMIN`
 
 #### Android
-- [ ] `Invitation` entity and Room DAO
-- [ ] `MembersViewModel` (list users, pending invitations, invite new)
-- [ ] Members list screen (ADMIN only)
-- [ ] Invite dialog (email input, validation)
-- [ ] Accept/decline invitation screen (shown in app on login if user has pending invitations)
-- [ ] Unit tests for ViewModels
+- [x] Apartment details (admin) → **Members**: people with access, pending invitations, invite dialog, cancel, remove (with confirmation)
+- [x] Apartment list shows a banner with the number of pending invitations → **Invitations** screen with Accept / Decline
+- [x] `PRIVATE` status: admin can "Mark as private"; cleaning service sees "Private" without actions
+- Room is still not used.
 
 ### Acceptance criteria verification
-- Backend: `cd backend && ./gradlew build` passes
-- Android: `cd android && ./gradlew assembleDebug testDebugUnitTest lint` passes
-- Tests: `REQ09_inviteCleaningService`, `REQ09_invitationExpires`, `REQ10_manageMembersAndInvitations`
-- Manual: invite email, log in as invitee, see invitation, accept/decline
+| Criterion | Verified by |
+|---|---|
+| REQ-09 admin invites by e-mail; accepted → CLEANING_SERVICE | `InvitationApiTest.REQ09_invitedUserSeesInvitationAndAcceptingGrantsCleaningServiceRole`, `MembersViewModelTest.REQ09_*`, `InvitationsViewModelTest.REQ09_acceptingReportsTheApartmentAndReloads` |
+| REQ-09 visible after login, or after registration with that e-mail | `InvitationApiTest.REQ09_invitationAppearsAfterRegisteringWithTheInvitedEmail`, `ApartmentListViewModelTest.REQ09_pendingInvitationsAreCountedForTheBanner` |
+| REQ-09 accept or decline | `InvitationApiTest.REQ09_invitedUserCanDecline`, `InvitationsViewModelTest.REQ09_decliningReloads` |
+| REQ-09 expires after 14 days | `InvitationApiTest.REQ09_invitationExpiresAfter14Days`, `InvitationsViewModelTest.REQ09_expiredInvitationShowsError` |
+| REQ-09 e-mail that already has a role → error | `InvitationApiTest.REQ09_invitingSomeoneWhoAlreadyHasARoleIsAnError`, `MembersViewModelTest.REQ09_existingMemberErrorIsShown` |
+| REQ-09 only admin invites; nobody else accepts someone's invitation | `InvitationApiTest.REQ09_onlyAdminCanInvite`, `…REQ09_nobodyElseCanAcceptSomeonesInvitation` |
+| REQ-10 admin sees members + pending invitations | `MembersApiTest.REQ10_adminSeesMembersAndPendingInvitations`, `MembersViewModelTest.REQ10_showsMembersAndPendingInvitations`, `MemberRepositoryImplTest.REQ10_*` |
+| REQ-10 cancel invitation, remove cleaning service (not the admin) | `MembersApiTest.REQ10_adminCanCancelInvitation`, `…REQ10_adminCanRemoveCleaningServiceButNotTheAdmin` |
+| REQ-10 admin only (backend) | `MembersApiTest.REQ10_onlyAdminManagesMembers` |
+| REQ-05 delete removes pending invitations | `InvitationApiTest.REQ05_deletingApartmentRemovesPendingInvitations` |
+| REQ-08 PRIVATE: admin only, frozen for cleaning service (Q-20) | `CleaningStatusApiTest.REQ08_adminMarksManuallyBlockedDatesPrivateAndCleaningServiceCannotChangeIt`, `CleaningStatusPolicyTest.REQ08_onlyAdminSetsOrLeavesPrivate`, `CleaningActionsTest.REQ08_privateIsFrozenForCleaningService` |
+
+Commands: `cd backend && ./gradlew build` (78 tests), `cd android && ./gradlew assembleDebug testDebugUnitTest lint` (69 tests, lint clean).
+Manual (owner): as admin open apartment → ⋮ → Apartment → ⋮ → Members → Invite the second account's e-mail;
+log in as that account → banner → Accept → apartment appears as Cleaning service; as admin remove the member;
+invite an e-mail without an account, then register with it → invitation appears.
 
 ---
 
@@ -350,6 +362,6 @@ After each stage is merged:
 | 1. Authentication | ✅ Done | `claude/hopeful-brahmagupta-3cr7bc` | [#2](https://github.com/ArturCepowski/bookman/pull/2) |
 | 2. Apartments | ✅ Done | `claude/hopeful-brahmagupta-3cr7bc-stage2` | [#3](https://github.com/ArturCepowski/bookman/pull/3) |
 | 3. Reservations | ✅ Done | `claude/hopeful-brahmagupta-3cr7bc` | [#4](https://github.com/ArturCepowski/bookman/pull/4) |
-| 4. Invitations | ⏳ Planned | TBD | TBD |
+| 4. Invitations | ✅ Done | `claude/hopeful-brahmagupta-3cr7bc` | Stage 4 PR |
 | 5. Notifications | ⏳ Planned | TBD | TBD |
 | 6. Localization | ⏳ Planned | TBD | TBD |

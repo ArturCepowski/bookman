@@ -39,6 +39,14 @@ public final class ApiErrors {
                 return AppError.IMPORT_FAILED;
             case "STATUS_CONFLICT":
                 return AppError.STATUS_CONFLICT;
+            case "ALREADY_MEMBER":
+                return AppError.ALREADY_MEMBER;
+            case "INVITATION_PENDING":
+                return AppError.INVITATION_PENDING;
+            case "INVITATION_EXPIRED":
+                return AppError.INVITATION_EXPIRED;
+            case "CANNOT_REMOVE_ADMIN":
+                return AppError.CANNOT_REMOVE_ADMIN;
             default:
                 return AppError.UNKNOWN;
         }

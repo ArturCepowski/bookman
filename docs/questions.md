@@ -199,10 +199,19 @@ app UI language immediately is part of Stage 6 (REQ-14); until then the UI follo
 - Setting the status a reservation already has is rejected with 409 – in practice someone else was faster, and the
   app reloads the list.
 
+### Q-22 (REQ-09, REQ-10): Invitation details
+**Status:** INFO – implemented as follows, tell me if anything should differ
+
+- Invitations are in-app only, no e-mail is sent (assumption from Q-07 in the spec). The invited person must log in
+  or register with exactly the invited e-mail (case-insensitive).
+- An expired invitation can simply be sent again; a second invitation while one is pending is rejected.
+- The admin cannot be removed (spec 6: single admin, no transfer). A removed cleaning service member keeps being shown
+  as "taken by" on reservations they took earlier (history is not rewritten).
+
 ## External/Product decisions (not blocking implementation)
 
 These answers are assumed in the spec but require external decision:
 
 - **Q-05 SMS provider:** Which provider (e.g., SMSAPI.pl, Twilio) and who pays for SMS?
-- **Q-07 Invitations by e-mail:** Should invitations trigger email notifications, or is in-app enough?
+- **Q-07 Invitations by e-mail:** Should invitations trigger email notifications, or is in-app enough? (v1: in-app only, see Q-22)
 - **Q-01 Booking.com integration:** Is iCal information (dates only, no guest data) sufficient for v1?

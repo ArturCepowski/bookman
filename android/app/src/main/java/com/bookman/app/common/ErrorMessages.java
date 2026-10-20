@@ -31,6 +31,14 @@ public final class ErrorMessages {
                 return R.string.error_import_failed;
             case STATUS_CONFLICT:
                 return R.string.error_status_conflict;
+            case ALREADY_MEMBER:
+                return R.string.error_already_member;
+            case INVITATION_PENDING:
+                return R.string.error_invitation_pending;
+            case INVITATION_EXPIRED:
+                return R.string.error_invitation_expired;
+            case CANNOT_REMOVE_ADMIN:
+                return R.string.error_cannot_remove_admin;
             default:
                 return R.string.error_unknown;
         }
