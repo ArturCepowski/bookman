@@ -68,7 +68,7 @@ public class Reservation {
                 || !checkOut.equals(imported.checkOut());
         checkIn = imported.checkIn();
         checkOut = imported.checkOut();
-        // ASSUMPTION(REQ-06): a cancelled reservation that reappears in the feed is active again (Q-20).
+        // REQ-06 / Q-20 (confirmed): a cancelled reservation that reappears in the feed is active again.
         cancelledAt = null;
         return changed;
     }

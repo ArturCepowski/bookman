@@ -179,7 +179,7 @@ In Stage 2 the language chosen in the profile is saved on the backend (used for 
 app UI language immediately is part of Stage 6 (REQ-14); until then the UI follows the system language.
 
 ### Q-20 (REQ-06, Q-01, Q-04): Bookings vs. manually closed dates; reservations that come back
-**Status:** PART 1 RESOLVED (owner decision 2026-10-20) · PART 2 OPEN
+**Status:** RESOLVED (owner decisions 2026-10-20)
 
 1. Booking.com marks **every** blocked period the same way (`SUMMARY:CLOSED - Not available`), so the app cannot
    tell guest bookings from dates the owner closed by hand. **Decision:** every event is imported as a reservation,
@@ -187,8 +187,8 @@ app UI language immediately is part of Stage 6 (REQ-14); until then the UI follo
    cannot change a PRIVATE reservation (it sees it as "Private" without actions). Only the ADMIN can set it back.
    *Proposed spec change for REQ-08:* add `PRIVATE` to the cleaning statuses with the rules above.
    *Impact on Stage 5:* PRIVATE reservations must not trigger "not planned" / "not done" SMS (REQ-11/12).
-2. `ASSUMPTION(REQ-06)`: a reservation that was cancelled (disappeared from the feed) and later reappears with the
-   same UID becomes active again; its cleaning status is kept. Please confirm.
+2. **Decision (confirmed):** a reservation that was cancelled (disappeared from the feed) and later reappears with
+   the same UID becomes active again; its cleaning status is kept.
 
 ### Q-21 (REQ-08): Details of the status rules
 **Status:** RESOLVED (owner decision 2026-10-20)
