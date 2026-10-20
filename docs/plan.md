@@ -349,7 +349,7 @@ After each stage is merged:
 |-------|--------|--------|-----|
 | 1. Authentication | ✅ Done | `claude/hopeful-brahmagupta-3cr7bc` | [#2](https://github.com/ArturCepowski/bookman/pull/2) |
 | 2. Apartments | ✅ Done | `claude/hopeful-brahmagupta-3cr7bc-stage2` | [#3](https://github.com/ArturCepowski/bookman/pull/3) |
-| 3. Reservations | ✅ Done | `claude/hopeful-brahmagupta-3cr7bc` | Stage 3 PR |
+| 3. Reservations | ✅ Done | `claude/hopeful-brahmagupta-3cr7bc` | [#4](https://github.com/ArturCepowski/bookman/pull/4) |
 | 4. Invitations | ⏳ Planned | TBD | TBD |
 | 5. Notifications | ⏳ Planned | TBD | TBD |
 | 6. Localization | ⏳ Planned | TBD | TBD |
