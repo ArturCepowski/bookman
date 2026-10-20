@@ -46,4 +46,16 @@ public class ProfileViewModelTest {
         assertEquals(0, repository.updates);
         assertEquals(FieldError.PHONE_INVALID, vm.phoneError().getValue());
     }
+
+    @Test
+    public void REQ02_phoneNumberCanBeRemoved() {
+        ProfileViewModel vm = new ProfileViewModel(repository);
+
+        vm.save("", "EN");
+
+        assertEquals(1, repository.updates);
+        assertNull(repository.lastPhone);
+        assertNull(vm.phoneError().getValue());
+        assertNull(vm.profile().getValue().phoneNumber());
+    }
 }

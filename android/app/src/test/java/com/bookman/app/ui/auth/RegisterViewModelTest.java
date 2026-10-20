@@ -55,4 +55,15 @@ public class RegisterViewModelTest {
         assertEquals(AppError.EMAIL_TAKEN, vm.errors().getValue().consume());
         assertNull(vm.registered().getValue());
     }
+
+    @Test
+    public void REQ01_registrationWithoutPhoneNumberIsSent() {
+        RegisterViewModel vm = new RegisterViewModel(repository, new DeviceLanguage(Locale.ENGLISH));
+
+        vm.register("anna@example.com", "secret123", "");
+
+        assertEquals(1, repository.calls);
+        assertNull(repository.lastPhone);
+        assertNotNull(vm.registered().getValue().consume());
+    }
 }

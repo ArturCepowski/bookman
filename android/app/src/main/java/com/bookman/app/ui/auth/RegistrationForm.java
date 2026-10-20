@@ -12,6 +12,7 @@ public final class RegistrationForm {
 
     public final String email;
     public final String password;
+    /** Optional (Q-24); null when left empty. */
     public final String phoneNumber;
     public final FieldError emailError;
     public final FieldError passwordError;
@@ -23,14 +24,14 @@ public final class RegistrationForm {
         this.phoneNumber = phoneNumber;
         this.emailError = EmailAddresses.isValid(email) ? null : FieldError.EMAIL_INVALID;
         this.passwordError = password.length() >= MIN_PASSWORD_LENGTH ? null : FieldError.PASSWORD_TOO_SHORT;
-        this.phoneError = PhoneNumbers.isValid(phoneNumber) ? null : FieldError.PHONE_INVALID;
+        this.phoneError = PhoneNumbers.isValidOptional(phoneNumber) ? null : FieldError.PHONE_INVALID;
     }
 
     public static RegistrationForm of(String email, String password, String phone) {
         return new RegistrationForm(
                 normalizeEmail(email),
                 password == null ? "" : password,
-                PhoneNumbers.normalize(phone));
+                PhoneNumbers.normalizeOptional(phone));
     }
 
     public boolean isValid() {

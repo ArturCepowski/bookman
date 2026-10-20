@@ -57,8 +57,9 @@ public class ProfileViewModel extends ViewModel {
         if (Boolean.TRUE.equals(loading.getValue())) {
             return;
         }
-        String normalized = PhoneNumbers.normalize(phone);
-        if (!PhoneNumbers.isValid(normalized)) {
+        // Q-24: an empty field removes the number.
+        String normalized = PhoneNumbers.normalizeOptional(phone);
+        if (!PhoneNumbers.isValidOptional(normalized)) {
             phoneError.setValue(FieldError.PHONE_INVALID);
             return;
         }

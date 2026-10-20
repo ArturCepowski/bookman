@@ -16,6 +16,17 @@ public final class PhoneNumbers {
         return phone == null ? "" : SEPARATORS.matcher(phone).replaceAll("");
     }
 
+    /** Q-24: the number is optional; blank input means "no number" (null). */
+    public static String normalizeOptional(String phone) {
+        String normalized = normalize(phone);
+        return normalized.isEmpty() ? null : normalized;
+    }
+
+    /** Valid when absent or strict E.164. */
+    public static boolean isValidOptional(String normalized) {
+        return normalized == null || isValid(normalized);
+    }
+
     public static boolean isValid(String normalized) {
         return E164.matcher(normalized).matches();
     }

@@ -7,7 +7,7 @@
 
     <string name="label_email">E-mail</string>
     <string name="label_password">Password</string>
-    <string name="label_phone">Phone number</string>
+    <string name="label_phone">Phone number (optional)</string>
     <string name="hint_phone">International format, e.g. +48600100200</string>
     <string name="hint_password">At least 8 characters</string>
 

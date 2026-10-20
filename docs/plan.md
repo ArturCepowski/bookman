@@ -62,7 +62,7 @@ Each stage includes automated tests for all implemented requirements.
 |---|---|
 | Register with e-mail, password, phone | `AuthApiTest.REQ01_registerReturnsTokenAndStoresUser`, `RegisterViewModelTest.REQ01_*` |
 | E-mail unique, case-insensitive, error shown | `AuthApiTest.REQ01_duplicateEmailIsRejectedCaseInsensitively`, `AuthRepositoryImplTest.REQ01_duplicateEmailMapsToEmailTaken`, `RegisterViewModelTest.REQ01_existingEmailShowsError` |
-| Phone required, E.164 | `AuthApiTest.REQ01_phoneNumberMustBeE164`, `AuthApiTest.REQ01_phoneNumberIsRequired`, `RegistrationFormTest.REQ01_phoneMustBeE164` |
+| Phone optional (Q-24 follow-up), E.164 when given | `AuthApiTest.REQ01_phoneNumberMustBeE164`, `AuthApiTest.REQ01_phoneNumberIsOptional`, `RegistrationFormTest.REQ01_phoneMustBeE164`, `RegistrationFormTest.REQ01_phoneNumberIsOptional`, `RegisterViewModelTest.REQ01_registrationWithoutPhoneNumberIsSent` |
 | Login | `AuthApiTest.REQ01_loginWithCorrectCredentialsReturnsToken`, `AuthApiTest.REQ01_loginWithWrongPasswordOrUnknownEmailFails`, `LoginViewModelTest.REQ01_*` |
 | Stays logged in until logout / expiry | `AuthApiTest.REQ01_tokenKeepsUserLoggedIn`, `AuthApiTest.REQ01_expiredSessionIsRejected`, `JwtServiceTest.REQ01_tokenIsValidUntilTtlThenExpires`, `ApartmentListViewModelTest.REQ01_expiredSessionIsReported`, `ApartmentListViewModelTest.REQ01_logoutEndsSession`, `ProfileRepositoryImplTest.REQ01_expiredSessionIsClearedAndReported` |
 | Logged-in user sees apartment list | Stage 2: the apartment list (REQ-03) is the start screen for a stored session |
@@ -109,7 +109,7 @@ Manual (owner): run backend locally, start the debug app on an emulator, registe
 ### Acceptance criteria verification
 | Criterion | Verified by |
 |---|---|
-| REQ-02 view/edit phone + language, saved on backend | `ProfileApiTest.REQ02_userCanViewAndEditPhoneAndLanguage`, `ProfileViewModelTest.REQ02_*`, `ProfileRepositoryImplTest.REQ02_*` |
+| REQ-02 view/edit phone + language, saved on backend; phone can be removed (Q-24 follow-up) | `ProfileApiTest.REQ02_userCanViewAndEditPhoneAndLanguage`, `ProfileApiTest.REQ02_phoneNumberCanBeRemoved`, `ProfileViewModelTest.REQ02_*`, `ProfileRepositoryImplTest.REQ02_*` |
 | REQ-02 e-mail cannot be changed | `ProfileApiTest.REQ02_emailCannotBeChanged` |
 | REQ-03 list with name + role, different roles per apartment | `ApartmentApiTest.REQ03_listShowsOnlyMyApartmentsWithMyRole`, `ApartmentListViewModelTest.REQ03_showsApartmentsWithRoles` |
 | REQ-03 empty state | `ApartmentApiTest.REQ03_newUserHasEmptyList`, `ApartmentListViewModelTest.REQ03_emptyStateOnlyAfterSuccessfulEmptyLoad` |
@@ -260,6 +260,8 @@ invite an e-mail without an account, then register with it → invitation appear
 - [x] Flyway `V6__sms_reminders.sql` (reminder hours on `apartment`, `TIME`, NULL = off) and
       `V7__push_notifications.sql` (`device_token`, `reminder_notification` with unique
       `(reservation, recipient, type, day)`, status PENDING/SENT/FAILED/NO_DEVICE) – Q-11, Q-24
+- [x] `V8__optional_phone_number.sql` – phone number optional in REQ-01/REQ-02 (owner decision, Q-24 follow-up);
+      app labels the field "(optional)" and an empty field removes the number
 - [x] `GET/PUT /api/apartments/{id}/notification-settings` (`"HH:MM"` or null), ADMIN only (REQ-05)
 - [x] `POST /api/users/me/devices` and `…/devices/unregister` – the app registers its FCM token after login and
       removes it on logout; a token belongs to the last user who logged in on that phone

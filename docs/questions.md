@@ -232,8 +232,9 @@ Messaging (FCM), and that **SMS support is removed**. Proposed spec changes:
 - Q-05 (SMS provider) is no longer needed.
 Consequences: a recipient gets reminders only on phones where they are logged in to Bookman and allowed notifications
 (Android 13+ asks once). Reminders for a user without such a phone are recorded as `NO_DEVICE`.
-Open follow-up: REQ-01 still requires a phone number "needed for REQ-11/12" – it is no longer used. Keep it required,
-make it optional, or remove it?
+Follow-up – **owner decision:** the phone number in REQ-01 / REQ-02 is now **optional** (it was needed only for SMS).
+When given it must still be E.164; an empty field in the profile removes it. Proposed spec change: REQ-01 acceptance
+criteria "phone number (optional, E.164)". Migration `V8__optional_phone_number.sql`.
 
 ## External/Product decisions (not blocking implementation)
 
