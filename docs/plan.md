@@ -1,13 +1,13 @@
 # Bookman – Implementation Plan
 
-**Project Status:** Planning phase  
-**Last updated:** 2026-10-02
+**Project Status:** Stage 1 done  
+**Last updated:** 2026-10-14
 
 ---
 
 ## Overview
 
-Bookman is implemented in 5 stages, each delivering a working, buildable system:
+Bookman is implemented in 6 stages, each delivering a working, buildable system:
 1. **Project setup and authentication** – user can register, log in, and stay logged in
 2. **Apartments and apartment management** – user can create apartments and see their list
 3. **Reservations and cleaning status** – imports from Booking.com and tracks cleaning progress
@@ -21,6 +21,7 @@ Each stage includes automated tests for all implemented requirements.
 
 ## Stage 1: Project setup and authentication
 
+**Status:** ✅ Done
 **Objective:** Create working backend and Android projects; users can register and log in.
 
 ### Requirements implemented
@@ -29,34 +30,45 @@ Each stage includes automated tests for all implemented requirements.
   - Email is unique (case-insensitive)
   - User stays logged in until logout or session expiry
   - Backend: JWT-based stateless authentication
-  - Android: store JWT in secure SharedPreferences
+  - Android: JWT in app-private SharedPreferences, excluded from backup and device transfer
 
 ### Implementation checklist
 
-#### Backend (Spring Boot 3)
-- [ ] Initialize Gradle project with Spring Boot 3, Java 21
-- [ ] PostgreSQL 16 setup with Flyway migrations
-- [ ] User entity and JPA repository
-- [ ] `POST /auth/register` endpoint (validate email uniqueness, phone format)
-- [ ] `POST /auth/login` endpoint (return JWT)
-- [ ] JWT filter and `@Secured` annotations
-- [ ] Integration tests for registration/login (fake DB or TestContainers)
+#### Backend (Spring Boot 3.5, Java 21)
+- [x] Gradle project with Spring Boot 3.5, Java 21 toolchain
+- [x] PostgreSQL 16 + Flyway (`V1__users.sql`, unique index on `lower(email)`)
+- [x] `User` entity and repository
+- [x] `POST /api/auth/register` (unique e-mail, E.164 phone, password 8–72, language)
+- [x] `POST /api/auth/login` (returns JWT + user)
+- [x] `GET /api/users/me` (authenticated; used by the app to verify the session)
+- [x] Stateless JWT filter, JSON error bodies with stable `code` (`EMAIL_TAKEN`, `INVALID_CREDENTIALS`, …)
+- [x] JWT secret only from env `BOOKMAN_JWT_SECRET` (startup fails without it)
+- [x] Integration tests on a real PostgreSQL 16 (embedded zonky binaries – Docker is not available
+      in the cloud environment, so Testcontainers was replaced)
 
-#### Android (Java, MVVM)
-- [ ] Initialize Gradle project with Java 17, minSdk 26
-- [ ] Retrofit + OkHttp client setup
-- [ ] Hilt dependency injection setup
-- [ ] User entity and Room database (basic schema)
-- [ ] `AuthViewModel` (registration, login, token storage)
-- [ ] Login and register screens (XML layouts, Material Components)
-- [ ] Secure JWT storage in EncryptedSharedPreferences
-- [ ] Unit tests for `AuthViewModel`
+#### Android (Java 17, MVVM)
+- [x] Gradle project (AGP 8.13, compileSdk/targetSdk 35, minSdk 26)
+- [x] Retrofit + OkHttp, auth interceptor (adds token, clears session on 401)
+- [x] Hilt DI
+- [x] `LoginViewModel`, `RegisterViewModel`, `HomeViewModel` + `AuthRepository`
+- [x] Login, register and placeholder home screens (XML + Material 3, Navigation)
+- [x] Token storage in app-private SharedPreferences (EncryptedSharedPreferences is deprecated)
+- [x] EN + PL strings for every user-visible text
+- [x] HTTPS-only network security config (debug build allows `10.0.2.2` for the local backend)
+- Room is not needed for REQ-01; it is introduced when there is data to cache.
 
 ### Acceptance criteria verification
-- `cd backend && ./gradlew build` passes (includes tests)
-- `cd android && ./gradlew assembleDebug testDebugUnitTest lint` passes
-- Test coverage: `AuthControllerTest` (REQ-01 registration), `AuthControllerTest` (REQ-01 login)
-- Manual: can register with email/password/phone, log in, app stores JWT
+| Criterion | Verified by |
+|---|---|
+| Register with e-mail, password, phone | `AuthApiTest.REQ01_registerReturnsTokenAndStoresUser`, `RegisterViewModelTest.REQ01_*` |
+| E-mail unique, case-insensitive, error shown | `AuthApiTest.REQ01_duplicateEmailIsRejectedCaseInsensitively`, `AuthRepositoryImplTest.REQ01_duplicateEmailMapsToEmailTaken`, `RegisterViewModelTest.REQ01_existingEmailShowsError` |
+| Phone required, E.164 | `AuthApiTest.REQ01_phoneNumberMustBeE164`, `AuthApiTest.REQ01_phoneNumberIsRequired`, `RegistrationFormTest.REQ01_phoneMustBeE164` |
+| Login | `AuthApiTest.REQ01_loginWithCorrectCredentialsReturnsToken`, `AuthApiTest.REQ01_loginWithWrongPasswordOrUnknownEmailFails`, `LoginViewModelTest.REQ01_*` |
+| Stays logged in until logout / expiry | `AuthApiTest.REQ01_tokenKeepsUserLoggedIn`, `AuthApiTest.REQ01_expiredSessionIsRejected`, `JwtServiceTest.REQ01_tokenIsValidUntilTtlThenExpires`, `HomeViewModelTest.REQ01_expiredSessionLogsOut`, `HomeViewModelTest.REQ01_logoutEndsSession` |
+| Logged-in user sees apartment list | Deferred to Stage 2 (REQ-03); Stage 1 shows a placeholder home screen |
+
+Commands: `cd backend && ./gradlew build` (13 tests), `cd android && ./gradlew assembleDebug testDebugUnitTest lint` (18 tests, lint clean).
+Manual (owner): run backend locally, start the debug app on an emulator, register, kill and reopen the app (still logged in), log out.
 
 ---
 
@@ -307,7 +319,7 @@ After each stage is merged:
 
 | Stage | Status | Branch | PR |
 |-------|--------|--------|-----|
-| 1. Authentication | 📋 Planning | TBD | TBD |
+| 1. Authentication | ✅ Done | `claude/hopeful-brahmagupta-3cr7bc` | Stage 1 PR |
 | 2. Apartments | ⏳ Planned | TBD | TBD |
 | 3. Reservations | ⏳ Planned | TBD | TBD |
 | 4. Invitations | ⏳ Planned | TBD | TBD |
