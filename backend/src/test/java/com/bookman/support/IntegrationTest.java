@@ -1,12 +1,16 @@
 package com.bookman.support;
 
+import com.bookman.apartment.ApartmentMember;
+import com.bookman.apartment.ApartmentMemberRepository;
 import com.bookman.apartment.ApartmentRepository;
+import com.bookman.apartment.Role;
 import com.bookman.user.UserRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.zonky.test.db.postgres.embedded.EmbeddedPostgres;
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.time.Instant;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,8 +38,10 @@ public abstract class IntegrationTest {
     @Autowired protected MockMvc mvc;
     @Autowired protected ObjectMapper json;
     @Autowired protected FakeCalendarFeedVerifier calendarFeeds;
+    @Autowired protected FakeReservationSource reservationSource;
     @Autowired private UserRepository users;
     @Autowired private ApartmentRepository apartments;
+    @Autowired private ApartmentMemberRepository members;
 
     private static EmbeddedPostgres start() {
         try {
@@ -57,6 +63,7 @@ public abstract class IntegrationTest {
         apartments.deleteAll();
         users.deleteAll();
         calendarFeeds.reset();
+        reservationSource.reset();
     }
 
     /** A registered user with a valid session. */
@@ -78,6 +85,18 @@ public abstract class IntegrationTest {
             request.contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsString(body));
         }
         return mvc.perform(request);
+    }
+
+    /** Registers an apartment as {@code admin} with the given iCal URL and returns its id. */
+    protected long createApartment(TestUser admin, String icalUrl) throws Exception {
+        Map<String, Object> body = Map.of("name", "Sunny flat",
+                "bookingUrl", "https://www.booking.com/hotel/pl/sunny.html", "icalUrl", icalUrl);
+        return bodyOf(call(admin, MockMvcRequestBuilders.post("/api/apartments"), body)).get("id").asLong();
+    }
+
+    /** Invitations arrive in Stage 4 (REQ-09); until then roles are inserted directly. */
+    protected void addCleaningService(long apartmentId, TestUser user) {
+        members.save(new ApartmentMember(apartmentId, user.id(), Role.CLEANING_SERVICE, Instant.now()));
     }
 
     protected JsonNode bodyOf(ResultActions result) throws Exception {

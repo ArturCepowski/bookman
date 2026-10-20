@@ -54,7 +54,8 @@ public class ApartmentDetailFragment extends Fragment {
         viewModel.errors().observe(getViewLifecycleOwner(), e -> UiErrors.show(this, e.consume()));
         viewModel.deleted().observe(getViewLifecycleOwner(), event -> {
             if (event.consume() != null) {
-                NavHostFragment.findNavController(this).popBackStack();
+                // The reservation screen below belongs to the deleted apartment, so go back to the list.
+                NavHostFragment.findNavController(this).popBackStack(R.id.apartmentListFragment, false);
             }
         });
 

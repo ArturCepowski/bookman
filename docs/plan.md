@@ -1,7 +1,7 @@
 # Bookman – Implementation Plan
 
-**Project Status:** Stages 1–2 done  
-**Last updated:** 2026-10-14
+**Project Status:** Stages 1–3 done  
+**Last updated:** 2026-10-20
 
 ---
 
@@ -129,46 +129,65 @@ log in as another user (no access), delete it; change phone/language in the prof
 
 ## Stage 3: Reservations and cleaning status
 
+**Status:** ✅ Done
 **Objective:** Reservations are imported from Booking.com and cleaning status is tracked.
 
 ### Requirements implemented
-- **REQ-06:** Reservation import (iCal parsing, periodic every 30 min, pull-to-refresh)
-- **REQ-07:** Reservation list (current/future only, sorted by check-out, shows status)
-- **REQ-08:** Cleaning status (`NOT_PLANNED` → `TAKEN` → `DONE`, with audit trail)
+- **REQ-06:** Reservation import (iCal, every 30 min, after registration, pull to refresh)
+- **REQ-07:** Reservation list (current/future only, sorted by check-out, status, who took the cleaning)
+- **REQ-08:** Cleaning status (`NOT_PLANNED` → `TAKEN` → `DONE`, admin may set any, audit trail)
+- **REQ-05 (completed):** deleting an apartment now also removes its reservations
 
 ### Implementation checklist
 
 #### Backend
-- [ ] `ReservationSource` interface with iCal implementation
-- [ ] `iCal4j` library integration for parsing
-- [ ] `Reservation` entity (apartment_id, check_in, check_out, status, ical_uid)
-- [ ] `ReservationStatusChange` entity (audit: who, when, old_status, new_status)
-- [ ] `@Scheduled` job for periodic import (every 30 minutes)
-- [ ] `POST /apartments/{id}/reservations/sync` endpoint (pull-to-refresh)
-- [ ] `GET /apartments/{id}/reservations` endpoint (filtered by check-out ≥ today)
-- [ ] `PATCH /reservations/{id}/status` endpoint (change status with rules)
-- [ ] Duplicate prevention: use iCal UID as idempotency key
-- [ ] Cancellation handling: mark disappeared reservations as `CANCELLED`
-- [ ] Authorization: both ADMIN and CLEANING_SERVICE can read; CLEANING_SERVICE restricted in status changes
-- [ ] Flyway migration: create tables for Reservation, ReservationStatusChange
-- [ ] Tests for iCal parsing, duplicate prevention, status transitions, authorization
+- [x] `ReservationSource` interface; v1 `IcalReservationSource` (shared `CalendarFeedClient`: https, no redirects, timeouts, 5 MB cap)
+- [x] ical4j relaxed parsing; events without UID/DTSTART/DTEND are skipped with a warning (Q-08);
+      parser tested on a **real Booking.com export** (Q-18)
+- [x] Flyway `V3__reservations.sql`: `reservation` (unique `(apartment_id, external_id)`, `cancelled_at`,
+      optimistic `version`), `reservation_status_change` (who/when/from/to), cascades from `apartment`
+- [x] Import is fail-safe: the feed is downloaded first; any error → nothing is written (Q-08)
+- [x] Re-import upserts by UID (no duplicates); changed dates are updated; reservations missing from the feed
+      that have not ended (check-out ≥ today in the apartment's time zone) are cancelled and hidden (Q-04)
+- [x] Scheduler every `PT30M` (`BOOKMAN_IMPORT_INTERVAL`), imports run in parallel on a small pool, one at a time
+      per apartment via a PostgreSQL advisory lock (Q-13)
+- [x] First import right after apartment registration (after commit)
+- [x] `GET /api/apartments/{id}/reservations`, `POST …/reservations/import`,
+      `PUT …/reservations/{rid}/cleaning-status`; every endpoint requires a role in the apartment (403 otherwise)
+- [x] Status rules in `CleaningStatusPolicy`; stale/concurrent changes → 409 `STATUS_CONFLICT`
 
 #### Android
-- [ ] `Reservation` entity and Room DAO
-- [ ] `ReservationListViewModel` (fetch, pull-to-refresh)
-- [ ] `ReservationDetailViewModel` (status change)
-- [ ] Reservation list screen (check-in, check-out, status, who took it)
-- [ ] Status change UI: CLEANING_SERVICE sees buttons (NOT_PLANNED → TAKEN, TAKEN → DONE)
-- [ ] Pull-to-refresh integration
-- [ ] Unit tests for ViewModels
+- [x] Tapping an apartment opens its reservation list; apartment details moved to the screen menu
+- [x] Rows: check-in → check-out (localized dates), status, "taken by"; empty state
+- [x] Pull to refresh = import from Booking.com, then reload (list still shown if the import fails)
+- [x] Buttons by role: cleaning service "Take this cleaning" / "Mark as cleaned"; admin "Change status" dialog
+- [x] After registering an apartment the app opens its reservations; after deleting it returns to the list
+- Room is still not used (the list is always loaded fresh from the backend).
 
 ### Acceptance criteria verification
-- Backend: `cd backend && ./gradlew build` passes
-- Android: `cd android && ./gradlew assembleDebug testDebugUnitTest lint` passes
-- Tests: `REQ06_importReservations`, `REQ06_noDuplicates`, `REQ06_handleCancellations`, `REQ07_reservationList`, `REQ08_cleaningStatus`, `REQ08_cleaningServiceCannotRevert`
-- Manual: add apartment with iCal URL, pull to refresh, see reservations, change status
+| Criterion | Verified by |
+|---|---|
+| REQ-06 import every 30 min + manual (pull to refresh) | `ReservationImportApiTest.REQ06_scheduleRunsEvery30MinutesForEveryApartment`, `…REQ06_anyMemberCanRefreshButStrangersCannot`, `ReservationListViewModelTest.REQ06_pullToRefreshImportsThenReloads`; live `bootRun` check: scheduled import stored the real export |
+| REQ-06 each booking → reservation with check-in/check-out | `IcalReservationParserTest.REQ06_realBookingExportBecomesReservationWithCheckInAndCheckOut`, `IcalReservationSourceTest.REQ06_*`, `ReservationImportApiTest.REQ06_importTurnsEachBookingIntoReservation` |
+| REQ-06 no duplicates (identity = UID) | `ReservationImportApiTest.REQ06_reimportDoesNotCreateDuplicates`, `…REQ06_changedDatesUpdateTheSameReservation` |
+| REQ-06 disappeared + not ended → cancelled and hidden | `ReservationImportApiTest.REQ06_disappearedFutureReservationIsCancelledAndHidden` |
+| REQ-06 behind `ReservationSource` | interface + `FakeReservationSource` in all API tests |
+| REQ-06 broken feed changes nothing (Q-08) | `ReservationImportApiTest.REQ06_failedDownloadChangesNothing`, `IcalReservationSourceTest.REQ06_unreadableFeedFailsInsteadOfReturningEmpty`, `ReservationListViewModelTest.REQ06_failedImportStillShowsLastKnownList` |
+| REQ-04 first import immediately after registration | `ReservationImportApiTest.REQ06_registrationImportsImmediately` |
+| REQ-07 current = check-out today or later, sorted by check-out | `ReservationListApiTest.REQ07_showsOnlyCurrentAndFutureSortedByCheckOut` |
+| REQ-07 row shows dates, status, who took it | `ReservationListApiTest.REQ07_rowShowsWhoTookTheCleaning`, `ReservationRepositoryImplTest.REQ07_listIsParsed`, `ReservationListViewModelTest.REQ07_*` |
+| REQ-07 visible to ADMIN and CLEANING_SERVICE | `ReservationListApiTest.REQ07_visibleToAdminAndCleaningServiceOnly` |
+| REQ-08 cleaning service NOT_PLANNED→TAKEN→DONE, responsible recorded | `CleaningStatusApiTest.REQ08_cleaningServiceTakesAndFinishesAndIsRecordedAsResponsible`, `CleaningStatusPolicyTest.REQ08_*`, `CleaningActionsTest.REQ08_*` |
+| REQ-08 cleaning service cannot revert (Q-02) | `CleaningStatusApiTest.REQ08_cleaningServiceCannotSkipOrRevert` |
+| REQ-08 admin sets any status | `CleaningStatusApiTest.REQ08_adminCanSetAnyStatusIncludingRevert` |
+| REQ-08 every change stores who and when | `CleaningStatusApiTest.REQ08_everyChangeStoresWhoAndWhen` |
+| REQ-08 no role → 403 (read and change) | `CleaningStatusApiTest.REQ08_usersWithoutRoleCannotChangeStatus`, `ReservationListApiTest.REQ07_visibleToAdminAndCleaningServiceOnly` |
+| REQ-05 delete removes reservations | `ReservationImportApiTest.REQ05_deletingApartmentRemovesItsReservations` |
 
-**Assumption (REQ-06):** iCal URL is validated during apartment registration (Stage 2). Re-validation happens on each import; malformed or unreachable URLs are logged but don't stop the app (retried next cycle).
+Commands: `cd backend && ./gradlew build` (63 tests), `cd android && ./gradlew assembleDebug testDebugUnitTest lint` (54 tests, lint clean).
+Manual (owner): open an apartment with a real iCal link → reservations appear (after registration or pull to refresh);
+as cleaning service take a cleaning and mark it cleaned; as admin revert it; check "taken by"; block dates in the
+Booking.com extranet and pull to refresh to see the new stay (and removal → it disappears).
 
 ---
 
@@ -329,8 +348,8 @@ After each stage is merged:
 | Stage | Status | Branch | PR |
 |-------|--------|--------|-----|
 | 1. Authentication | ✅ Done | `claude/hopeful-brahmagupta-3cr7bc` | [#2](https://github.com/ArturCepowski/bookman/pull/2) |
-| 2. Apartments | ✅ Done | `claude/hopeful-brahmagupta-3cr7bc-stage2` | Stage 2 PR |
-| 3. Reservations | ⏳ Planned | TBD | TBD |
+| 2. Apartments | ✅ Done | `claude/hopeful-brahmagupta-3cr7bc-stage2` | [#3](https://github.com/ArturCepowski/bookman/pull/3) |
+| 3. Reservations | ✅ Done | `claude/hopeful-brahmagupta-3cr7bc` | Stage 3 PR |
 | 4. Invitations | ⏳ Planned | TBD | TBD |
 | 5. Notifications | ⏳ Planned | TBD | TBD |
 | 6. Localization | ⏳ Planned | TBD | TBD |

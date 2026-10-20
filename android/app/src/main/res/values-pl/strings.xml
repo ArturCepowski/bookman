@@ -61,4 +61,17 @@
     <string name="error_forbidden">Nie masz uprawnień do tej operacji</string>
     <string name="error_ical_unreachable">Nie można otworzyć linku do kalendarza. Sprawdź, czy skopiowano cały link eksportu.</string>
     <string name="error_ical_not_a_calendar">Ten link nie zwraca kalendarza Booking.com. Użyj linku eksportu iCal.</string>
+    <string name="title_reservations">Rezerwacje</string>
+    <string name="reservations_empty">Brak bieżących i nadchodzących rezerwacji. Przeciągnij w dół, aby pobrać je z Booking.com.</string>
+    <string name="reservation_dates">%1$s → %2$s</string>
+    <string name="reservation_taken_by">Sprzątanie bierze: %1$s</string>
+    <string name="status_not_planned">Sprzątanie niezaplanowane</string>
+    <string name="status_taken">Sprzątanie zaplanowane</string>
+    <string name="status_done">Posprzątane</string>
+    <string name="action_take_cleaning">Biorę to sprzątanie</string>
+    <string name="action_mark_cleaned">Oznacz jako posprzątane</string>
+    <string name="action_mark_not_planned">Oznacz jako niezaplanowane</string>
+    <string name="action_change_status">Zmień status</string>
+    <string name="error_import_failed">Nie udało się odświeżyć rezerwacji z Booking.com. Pokazuję ostatnią znaną listę.</string>
+    <string name="error_status_conflict">Ktoś inny zmienił w międzyczasie to sprzątanie. Lista została odświeżona.</string>
 </resources>

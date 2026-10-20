@@ -22,3 +22,8 @@ bookman:
     secret: ${BOOKMAN_JWT_SECRET:}
     # REQ-01 / Q-15 (confirmed): a login session lasts 30 days.
     ttl: ${BOOKMAN_JWT_TTL:30d}
+  import:
+    # REQ-06: every apartment is re-imported every 30 minutes.
+    interval: ${BOOKMAN_IMPORT_INTERVAL:PT30M}
+    initial-delay: PT1M
+    scheduler-enabled: true

@@ -89,7 +89,7 @@ public class ApartmentFormFragment extends Fragment {
             } else {
                 Bundle args = new Bundle();
                 args.putLong(ApartmentFormViewModel.ARG_APARTMENT_ID, id);
-                NavHostFragment.findNavController(this).navigate(R.id.action_form_to_detail, args,
+                NavHostFragment.findNavController(this).navigate(R.id.action_form_to_reservations, args,
                         new NavOptions.Builder().setPopUpTo(R.id.apartmentFormFragment, true).build());
             }
         });

@@ -16,10 +16,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 /** Exercises the real HTTP client against a local server – no external network. */
-class HttpCalendarFeedVerifierTest {
+class CalendarFeedClientTest {
 
     private HttpServer server;
-    private final HttpCalendarFeedVerifier verifier = new HttpCalendarFeedVerifier();
+    private final CalendarFeedClient client = new CalendarFeedClient();
 
     @BeforeEach
     void start() throws IOException {
@@ -40,8 +40,8 @@ class HttpCalendarFeedVerifierTest {
     }
 
     @Test
-    void REQ04_bookingCalendarExportIsAccepted() {
-        assertThatCode(() -> verifier.verify(url("/ok"))).doesNotThrowAnyException();
+    void REQ04_realBookingCalendarExportIsAccepted() {
+        assertThatCode(() -> client.fetch(url("/ok"))).doesNotThrowAnyException();
     }
 
     @Test
@@ -67,7 +67,7 @@ class HttpCalendarFeedVerifierTest {
     }
 
     private CalendarFeedException.Reason reasonFor(URI uri) {
-        return catchThrowableOfType(CalendarFeedException.class, () -> verifier.verify(uri)).reason();
+        return catchThrowableOfType(CalendarFeedException.class, () -> client.fetch(uri)).reason();
     }
 
     private URI url(String path) {
@@ -75,7 +75,7 @@ class HttpCalendarFeedVerifierTest {
     }
 
     private static byte[] fixture() throws IOException {
-        try (InputStream in = HttpCalendarFeedVerifierTest.class.getResourceAsStream("/ical/booking-sample.ics")) {
+        try (InputStream in = CalendarFeedClientTest.class.getResourceAsStream("/ical/booking-export-real.ics")) {
             return in.readAllBytes();
         }
     }

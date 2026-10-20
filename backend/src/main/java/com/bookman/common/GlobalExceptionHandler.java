@@ -5,6 +5,7 @@ import java.util.Map;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -24,6 +25,12 @@ public class GlobalExceptionHandler {
                 .forEach(fe -> fields.putIfAbsent(fe.getField(), fe.getDefaultMessage()));
         return ResponseEntity.badRequest()
                 .body(new ApiError(ErrorCode.VALIDATION_FAILED, "Validation failed", fields));
+    }
+
+    @ExceptionHandler(ObjectOptimisticLockingFailureException.class)
+    ResponseEntity<ApiError> handleConcurrentUpdate(ObjectOptimisticLockingFailureException e) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(ApiError.of(ErrorCode.STATUS_CONFLICT, "Changed by someone else in the meantime"));
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
