@@ -16,7 +16,8 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
     /** REQ-07: current and future, not cancelled, by check-out date. */
     @Query("""
             select new com.bookman.reservation.ReservationView(r.id, r.checkIn, r.checkOut, r.cleaningStatus,
-                case when r.cleaningStatus <> com.bookman.reservation.CleaningStatus.NOT_PLANNED then u.email end)
+                case when r.cleaningStatus in (com.bookman.reservation.CleaningStatus.TAKEN,
+                    com.bookman.reservation.CleaningStatus.DONE) then u.email end)
             from Reservation r left join com.bookman.user.User u on u.id = r.responsibleUserId
             where r.apartmentId = :apartmentId and r.cancelledAt is null and r.checkOut >= :today
             order by r.checkOut, r.checkIn, r.id
@@ -25,7 +26,8 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
 
     @Query("""
             select new com.bookman.reservation.ReservationView(r.id, r.checkIn, r.checkOut, r.cleaningStatus,
-                case when r.cleaningStatus <> com.bookman.reservation.CleaningStatus.NOT_PLANNED then u.email end)
+                case when r.cleaningStatus in (com.bookman.reservation.CleaningStatus.TAKEN,
+                    com.bookman.reservation.CleaningStatus.DONE) then u.email end)
             from Reservation r left join com.bookman.user.User u on u.id = r.responsibleUserId
             where r.id = :id
             """)

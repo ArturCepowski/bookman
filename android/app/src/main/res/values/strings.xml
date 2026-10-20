@@ -78,4 +78,33 @@
     <string name="action_change_status">Change status</string>
     <string name="error_import_failed">Could not refresh reservations from Booking.com. Showing the last known list.</string>
     <string name="error_status_conflict">Someone else changed this cleaning in the meantime. The list was refreshed.</string>
+    <string name="status_private">Private (blocked by the owner)</string>
+    <string name="action_mark_private">Mark as private</string>
+    <string name="title_members">Members</string>
+    <string name="title_invitations">Invitations</string>
+    <string name="members_header">People with access</string>
+    <string name="invitations_header">Pending invitations</string>
+    <string name="invitation_valid_until">Valid until %1$s</string>
+    <string name="invitation_from">From %1$s · valid until %2$s</string>
+    <string name="action_invite">Invite cleaning service</string>
+    <string name="invite_dialog_title">Invite cleaning service</string>
+    <string name="invite_dialog_message">The person will see the invitation in Bookman after logging in or registering with this e-mail.</string>
+    <string name="action_send_invitation">Invite</string>
+    <string name="invited_message">Invitation sent to %1$s</string>
+    <string name="action_cancel_invitation">Cancel</string>
+    <string name="action_remove_member">Remove</string>
+    <string name="remove_member_title">Remove %1$s?</string>
+    <string name="remove_member_message">They will lose access to this apartment and its reservations.</string>
+    <string name="invitations_empty">No pending invitations.</string>
+    <string name="action_accept">Accept</string>
+    <string name="action_decline">Decline</string>
+    <string name="accepted_message">You now have access to %1$s</string>
+    <plurals name="pending_invitations_banner">
+        <item quantity="one">You have %d pending invitation. Tap to see it.</item>
+        <item quantity="other">You have %d pending invitations. Tap to see them.</item>
+    </plurals>
+    <string name="error_already_member">This person already has access to the apartment</string>
+    <string name="error_invitation_pending">This e-mail has already been invited</string>
+    <string name="error_invitation_expired">This invitation has expired. Ask the owner to invite you again.</string>
+    <string name="error_cannot_remove_admin">The admin of the apartment cannot be removed</string>
 </resources>

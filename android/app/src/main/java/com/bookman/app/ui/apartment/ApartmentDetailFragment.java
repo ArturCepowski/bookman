@@ -70,6 +70,7 @@ public class ApartmentDetailFragment extends Fragment {
                 boolean admin = viewModel.canManage();
                 menu.findItem(R.id.menu_edit).setVisible(admin);
                 menu.findItem(R.id.menu_delete).setVisible(admin);
+                menu.findItem(R.id.menu_members).setVisible(admin);
             }
 
             @Override
@@ -79,6 +80,13 @@ public class ApartmentDetailFragment extends Fragment {
                     args.putLong(ApartmentFormViewModel.ARG_APARTMENT_ID, viewModel.apartmentId());
                     NavHostFragment.findNavController(ApartmentDetailFragment.this)
                             .navigate(R.id.action_detail_to_form, args);
+                    return true;
+                }
+                if (item.getItemId() == R.id.menu_members) {
+                    Bundle args = new Bundle();
+                    args.putLong(ApartmentFormViewModel.ARG_APARTMENT_ID, viewModel.apartmentId());
+                    NavHostFragment.findNavController(ApartmentDetailFragment.this)
+                            .navigate(R.id.action_detail_to_members, args);
                     return true;
                 }
                 if (item.getItemId() == R.id.menu_delete) {

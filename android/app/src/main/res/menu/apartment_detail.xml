@@ -7,6 +7,11 @@
         android:visible="false"
         app:showAsAction="ifRoom" />
     <item
+        android:id="@+id/menu_members"
+        android:title="@string/title_members"
+        android:visible="false"
+        app:showAsAction="never" />
+    <item
         android:id="@+id/menu_delete"
         android:title="@string/action_delete"
         android:visible="false"

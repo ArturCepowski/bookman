@@ -49,6 +49,9 @@
         <action
             android:id="@+id/action_apartments_to_profile"
             app:destination="@id/profileFragment" />
+        <action
+            android:id="@+id/action_apartments_to_invitations"
+            app:destination="@id/invitationsFragment" />
     </fragment>
 
     <fragment
@@ -73,6 +76,9 @@
         <action
             android:id="@+id/action_detail_to_form"
             app:destination="@id/apartmentFormFragment" />
+        <action
+            android:id="@+id/action_detail_to_members"
+            app:destination="@id/membersFragment" />
     </fragment>
 
     <fragment
@@ -87,6 +93,20 @@
             android:id="@+id/action_form_to_reservations"
             app:destination="@id/reservationListFragment" />
     </fragment>
+
+    <fragment
+        android:id="@+id/membersFragment"
+        android:name="com.bookman.app.ui.member.MembersFragment"
+        android:label="@string/title_members">
+        <argument
+            android:name="apartmentId"
+            app:argType="long" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/invitationsFragment"
+        android:name="com.bookman.app.ui.member.InvitationsFragment"
+        android:label="@string/title_invitations" />
 
     <fragment
         android:id="@+id/profileFragment"

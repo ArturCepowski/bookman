@@ -14,4 +14,13 @@ public interface ApartmentMemberRepository extends JpaRepository<ApartmentMember
             order by lower(a.name), a.id
             """)
     List<ApartmentSummary> findSummariesForUser(@Param("userId") long userId);
+
+    /** REQ-10: members of one apartment with their e-mails, admin first. */
+    @Query("""
+            select new com.bookman.apartment.MemberView(u.id, u.email, m.role)
+            from ApartmentMember m, com.bookman.user.User u
+            where u.id = m.id.userId and m.id.apartmentId = :apartmentId
+            order by case when m.role = com.bookman.apartment.Role.ADMIN then 0 else 1 end, u.email
+            """)
+    List<MemberView> findMembers(@Param("apartmentId") long apartmentId);
 }

@@ -68,7 +68,7 @@ public class Reservation {
                 || !checkOut.equals(imported.checkOut());
         checkIn = imported.checkIn();
         checkOut = imported.checkOut();
-        // ASSUMPTION(REQ-06): a cancelled reservation that reappears in the feed is active again (Q-20).
+        // REQ-06 / Q-20 (confirmed): a cancelled reservation that reappears in the feed is active again.
         cancelledAt = null;
         return changed;
     }
@@ -77,11 +77,11 @@ public class Reservation {
         cancelledAt = when;
     }
 
-    // ASSUMPTION(REQ-08): whoever sets TAKEN (admin included) is responsible; NOT_PLANNED clears it; DONE keeps it (Q-21).
+    // Q-21: whoever sets TAKEN (admin included) is responsible; DONE keeps it; NOT_PLANNED/PRIVATE clear it.
     void changeCleaningStatus(CleaningStatus newStatus, long actorId) {
         if (newStatus == CleaningStatus.TAKEN) {
             responsibleUserId = actorId;
-        } else if (newStatus == CleaningStatus.NOT_PLANNED) {
+        } else if (newStatus == CleaningStatus.NOT_PLANNED || newStatus == CleaningStatus.PRIVATE) {
             responsibleUserId = null;
         }
         cleaningStatus = newStatus;

@@ -47,6 +47,14 @@ public class ApartmentListFragment extends Fragment {
             binding.emptyState.setVisibility(state.isEmpty() ? View.VISIBLE : View.GONE);
         });
         viewModel.errors().observe(getViewLifecycleOwner(), e -> UiErrors.show(this, e.consume()));
+        viewModel.pendingInvitations().observe(getViewLifecycleOwner(), count -> {
+            int n = count == null ? 0 : count;
+            binding.invitationsBanner.setVisibility(n > 0 ? View.VISIBLE : View.GONE);
+            binding.invitationsBannerText.setText(
+                    getResources().getQuantityString(R.plurals.pending_invitations_banner, n, n));
+        });
+        binding.invitationsBanner.setOnClickListener(v ->
+                NavHostFragment.findNavController(this).navigate(R.id.action_apartments_to_invitations));
         viewModel.loggedOut().observe(getViewLifecycleOwner(), event -> {
             if (event.consume() != null) {
                 NavHostFragment.findNavController(this).navigate(R.id.action_global_login);

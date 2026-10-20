@@ -1,16 +1,14 @@
 package com.bookman.app.ui.auth;
 
+import com.bookman.app.ui.common.EmailAddresses;
 import com.bookman.app.ui.common.FieldError;
 import com.bookman.app.ui.common.PhoneNumbers;
 
-import java.util.Locale;
-import java.util.regex.Pattern;
 
 /** Client-side checks mirroring the backend rules so users get instant feedback (backend still validates). */
 public final class RegistrationForm {
 
     static final int MIN_PASSWORD_LENGTH = 8;
-    private static final Pattern EMAIL = Pattern.compile("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$");
 
     public final String email;
     public final String password;
@@ -23,7 +21,7 @@ public final class RegistrationForm {
         this.email = email;
         this.password = password;
         this.phoneNumber = phoneNumber;
-        this.emailError = EMAIL.matcher(email).matches() ? null : FieldError.EMAIL_INVALID;
+        this.emailError = EmailAddresses.isValid(email) ? null : FieldError.EMAIL_INVALID;
         this.passwordError = password.length() >= MIN_PASSWORD_LENGTH ? null : FieldError.PASSWORD_TOO_SHORT;
         this.phoneError = PhoneNumbers.isValid(phoneNumber) ? null : FieldError.PHONE_INVALID;
     }
@@ -40,6 +38,6 @@ public final class RegistrationForm {
     }
 
     static String normalizeEmail(String email) {
-        return email == null ? "" : email.trim().toLowerCase(Locale.ROOT);
+        return EmailAddresses.normalize(email);
     }
 }

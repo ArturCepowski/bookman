@@ -74,4 +74,35 @@
     <string name="action_change_status">Zmień status</string>
     <string name="error_import_failed">Nie udało się odświeżyć rezerwacji z Booking.com. Pokazuję ostatnią znaną listę.</string>
     <string name="error_status_conflict">Ktoś inny zmienił w międzyczasie to sprzątanie. Lista została odświeżona.</string>
+    <string name="status_private">Prywatne (zablokowane przez właściciela)</string>
+    <string name="action_mark_private">Oznacz jako prywatne</string>
+    <string name="title_members">Członkowie</string>
+    <string name="title_invitations">Zaproszenia</string>
+    <string name="members_header">Osoby z dostępem</string>
+    <string name="invitations_header">Oczekujące zaproszenia</string>
+    <string name="invitation_valid_until">Ważne do %1$s</string>
+    <string name="invitation_from">Od %1$s · ważne do %2$s</string>
+    <string name="action_invite">Zaproś serwis sprzątający</string>
+    <string name="invite_dialog_title">Zaproś serwis sprzątający</string>
+    <string name="invite_dialog_message">Osoba zobaczy zaproszenie w Bookmanie po zalogowaniu się lub zarejestrowaniu z tym adresem e-mail.</string>
+    <string name="action_send_invitation">Zaproś</string>
+    <string name="invited_message">Wysłano zaproszenie do %1$s</string>
+    <string name="action_cancel_invitation">Anuluj</string>
+    <string name="action_remove_member">Usuń</string>
+    <string name="remove_member_title">Usunąć %1$s?</string>
+    <string name="remove_member_message">Ta osoba straci dostęp do mieszkania i jego rezerwacji.</string>
+    <string name="invitations_empty">Brak oczekujących zaproszeń.</string>
+    <string name="action_accept">Akceptuj</string>
+    <string name="action_decline">Odrzuć</string>
+    <string name="accepted_message">Masz teraz dostęp do: %1$s</string>
+    <plurals name="pending_invitations_banner">
+        <item quantity="one">Masz %d oczekujące zaproszenie. Dotknij, aby je zobaczyć.</item>
+        <item quantity="few">Masz %d oczekujące zaproszenia. Dotknij, aby je zobaczyć.</item>
+        <item quantity="many">Masz %d oczekujących zaproszeń. Dotknij, aby je zobaczyć.</item>
+        <item quantity="other">Masz %d oczekującego zaproszenia. Dotknij, aby je zobaczyć.</item>
+    </plurals>
+    <string name="error_already_member">Ta osoba ma już dostęp do mieszkania</string>
+    <string name="error_invitation_pending">Ten adres e-mail został już zaproszony</string>
+    <string name="error_invitation_expired">To zaproszenie wygasło. Poproś właściciela o ponowne zaproszenie.</string>
+    <string name="error_cannot_remove_admin">Nie można usunąć administratora mieszkania</string>
 </resources>
