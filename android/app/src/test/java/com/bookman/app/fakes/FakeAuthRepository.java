@@ -41,12 +41,6 @@ public class FakeAuthRepository implements AuthRepository {
     }
 
     @Override
-    public void loadCurrentUser(Consumer<Result<User>> callback) {
-        calls++;
-        callback.accept(nextResult);
-    }
-
-    @Override
     public void logout() {
         loggedIn = false;
     }

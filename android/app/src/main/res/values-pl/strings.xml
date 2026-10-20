@@ -2,7 +2,6 @@
 <resources>
     <string name="title_login">Logowanie</string>
     <string name="title_register">Załóż konto</string>
-    <string name="title_home">Bookman</string>
 
     <string name="label_email">E-mail</string>
     <string name="label_password">Hasło</string>
@@ -15,8 +14,6 @@
     <string name="action_go_to_register">Nie masz konta? Załóż je</string>
     <string name="action_logout">Wyloguj się</string>
 
-    <string name="home_logged_in_as">Zalogowano jako %1$s</string>
-
     <string name="field_error_email">Podaj poprawny adres e-mail</string>
     <string name="field_error_password">Hasło musi mieć co najmniej 8 znaków</string>
     <string name="field_error_phone">Podaj numer z kierunkowym kraju, np. +48600100200</string>
@@ -28,4 +25,40 @@
     <string name="error_invalid_credentials">Nieprawidłowy e-mail lub hasło</string>
     <string name="error_session_expired">Sesja wygasła. Zaloguj się ponownie.</string>
     <string name="error_unknown">Coś poszło nie tak. Spróbuj ponownie.</string>
+    <string name="title_apartments">Moje mieszkania</string>
+    <string name="title_apartment">Mieszkanie</string>
+    <string name="title_apartment_form">Dane mieszkania</string>
+    <string name="title_profile">Profil</string>
+
+    <string name="label_apartment_name">Nazwa mieszkania</string>
+    <string name="label_booking_url">Link do oferty na Booking.com</string>
+    <string name="label_ical_url">Link eksportu kalendarza (iCal) z Booking.com</string>
+    <string name="label_time_zone">Strefa czasowa</string>
+    <string name="label_language">Język</string>
+    <string name="hint_booking_url">np. https://www.booking.com/hotel/pl/…</string>
+    <string name="hint_ical_url">Extranet → Kalendarz → Synchronizuj kalendarze → Eksport</string>
+
+    <string name="role_admin">Administrator</string>
+    <string name="role_cleaning_service">Serwis sprzątający</string>
+
+    <string name="apartments_empty">Nie masz jeszcze żadnych mieszkań. Zarejestruj pierwsze mieszkanie przyciskiem poniżej.</string>
+
+    <string name="action_register_apartment">Zarejestruj mieszkanie</string>
+    <string name="action_save">Zapisz</string>
+    <string name="action_edit">Edytuj</string>
+    <string name="action_delete">Usuń</string>
+    <string name="action_cancel">Anuluj</string>
+
+    <string name="delete_apartment_title">Usunąć mieszkanie?</string>
+    <string name="delete_apartment_message">Zostaną usunięte jego rezerwacje, role i zaproszenia. Tej operacji nie można cofnąć.</string>
+    <string name="profile_saved">Profil zapisany</string>
+
+    <string name="field_error_apartment_name">Nazwa musi mieć od 1 do 60 znaków</string>
+    <string name="field_error_booking_url">Wklej link https do swojej oferty na booking.com</string>
+    <string name="field_error_ical_url">Wklej link https eksportu kalendarza z Booking.com</string>
+    <string name="field_error_time_zone">Wybierz strefę czasową z listy</string>
+
+    <string name="error_forbidden">Nie masz uprawnień do tej operacji</string>
+    <string name="error_ical_unreachable">Nie można otworzyć linku do kalendarza. Sprawdź, czy skopiowano cały link eksportu.</string>
+    <string name="error_ical_not_a_calendar">Ten link nie zwraca kalendarza Booking.com. Użyj linku eksportu iCal.</string>
 </resources>

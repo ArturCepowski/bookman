@@ -41,7 +41,7 @@ public class LoginFragment extends Fragment {
             binding.progress.setVisibility(state.loading ? View.VISIBLE : View.GONE);
             binding.loginButton.setEnabled(!state.loading);
             binding.emailLayout.setError(state.emailError == null ? null : getString(state.emailError.message));
-            binding.passwordLayout.setError(state.passwordError == null ? null : getString(R.string.field_error_required));
+            binding.passwordLayout.setError(state.passwordError == null ? null : getString(state.passwordError.message));
         });
         viewModel.errors().observe(getViewLifecycleOwner(), event -> {
             AppError error = event.consume();
@@ -51,7 +51,7 @@ public class LoginFragment extends Fragment {
         });
         viewModel.loggedIn().observe(getViewLifecycleOwner(), event -> {
             if (event.consume() != null) {
-                NavHostFragment.findNavController(this).navigate(R.id.action_login_to_home);
+                NavHostFragment.findNavController(this).navigate(R.id.action_login_to_apartments);
             }
         });
     }

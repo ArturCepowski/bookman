@@ -11,7 +11,5 @@ public interface AuthRepository {
 
     void login(String email, String password, Consumer<Result<User>> callback);
 
-    void loadCurrentUser(Consumer<Result<User>> callback);
-
     void logout();
 }

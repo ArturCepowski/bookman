@@ -1,21 +1,41 @@
 package com.bookman.support;
 
+import com.bookman.apartment.ApartmentRepository;
+import com.bookman.user.UserRepository;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.zonky.test.db.postgres.embedded.EmbeddedPostgres;
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.util.Map;
+import org.junit.jupiter.api.BeforeEach;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultActions;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 /** Full-stack tests against a real PostgreSQL 16 (embedded binaries, no Docker needed). */
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
+@Import(TestBeans.class)
 public abstract class IntegrationTest {
 
     private static final EmbeddedPostgres POSTGRES = start();
+
+    @Autowired protected MockMvc mvc;
+    @Autowired protected ObjectMapper json;
+    @Autowired protected FakeCalendarFeedVerifier calendarFeeds;
+    @Autowired private UserRepository users;
+    @Autowired private ApartmentRepository apartments;
 
     private static EmbeddedPostgres start() {
         try {
@@ -30,5 +50,37 @@ public abstract class IntegrationTest {
         registry.add("spring.datasource.url", () -> POSTGRES.getJdbcUrl("postgres", "postgres"));
         registry.add("spring.datasource.username", () -> "postgres");
         registry.add("spring.datasource.password", () -> "postgres");
+    }
+
+    @BeforeEach
+    void cleanDatabase() {
+        apartments.deleteAll();
+        users.deleteAll();
+        calendarFeeds.reset();
+    }
+
+    /** A registered user with a valid session. */
+    protected record TestUser(long id, String token) {
+    }
+
+    protected TestUser registerUser(String email) throws Exception {
+        String body = json.writeValueAsString(Map.of(
+                "email", email, "password", "secret123", "phoneNumber", "+48600100200", "language", "EN"));
+        JsonNode node = json.readTree(mvc.perform(MockMvcRequestBuilders.post("/api/auth/register")
+                .contentType(MediaType.APPLICATION_JSON).content(body))
+                .andReturn().getResponse().getContentAsString());
+        return new TestUser(node.get("user").get("id").asLong(), node.get("token").asText());
+    }
+
+    protected ResultActions call(TestUser user, MockHttpServletRequestBuilder request, Object body) throws Exception {
+        request.header("Authorization", "Bearer " + user.token());
+        if (body != null) {
+            request.contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsString(body));
+        }
+        return mvc.perform(request);
+    }
+
+    protected JsonNode bodyOf(ResultActions result) throws Exception {
+        return json.readTree(result.andReturn().getResponse().getContentAsString());
     }
 }

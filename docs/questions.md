@@ -137,23 +137,47 @@
 - Flyway migrations run on backend startup (Spring Boot + Flyway auto-config).
 
 ### Q-15 (REQ-01): Password policy, session length, logout
-**Status:** OPEN – implemented with assumptions, please confirm
+**Status:** RESOLVED – confirmed by the owner on 2026-10-15 (as implemented below)
 
 The spec says the user "stays logged in until they log out or the session expires" but defines no
-expiry, password rules or server-side logout. Assumptions in code (`ASSUMPTION(REQ-01)`):
+expiry, password rules or server-side logout. Decision:
 - Password: 8–72 characters, no composition rules (72 = bcrypt input limit).
 - Session: JWT valid for **30 days** (`BOOKMAN_JWT_TTL`), no refresh token; after expiry the app
   returns to the login screen.
 - Logout is client-side (token deleted from the phone). A stolen token stays valid until expiry;
   server-side revocation would need a token blacklist or short-lived tokens + refresh tokens.
 
-Questions: is 30 days acceptable? Is server-side logout/revocation needed in v1?
+30 days is accepted; server-side logout/revocation is not needed in v1.
 
 ### Q-16 (NFR-02, Q-06): Production API address
 **Status:** OPEN
 
 Release builds use `https://bookman.invalid/` as a placeholder base URL until the AWS hosting has a
 domain + TLS certificate. Build with `-PbookmanApiUrl=https://<real-host>/`. Which domain will the API use?
+
+### Q-17 (REQ-04, NFR-03): Which calendar/listing URLs are accepted
+**Status:** RESOLVED – confirmed by the owner on 2026-10-15
+
+The backend downloads the iCal URL entered by the user. Without restrictions this allows SSRF – e.g. making
+the server on AWS fetch `http://169.254.169.254/` (instance metadata with credentials).
+Decision: both the listing link and the iCal link must be **https** URLs on
+`booking.com` or its subdomains (e.g. `ical.booking.com`), default port, no redirects followed.
+The host list is configurable (`bookman.apartment.allowed-hosts`) so other channels can be added later.
+No other domains need to be accepted in v1.
+
+### Q-18 (REQ-06, Q-08): Real iCal fixture
+**Status:** OPEN – the owner agreed on 2026-10-15 to provide a real anonymized export; waiting for the file
+
+Q-08 asks for a real, anonymized Booking.com iCal export as a test fixture. I do not have one, so
+`backend/src/test/resources/ical/booking-sample.ics` is a **synthetic** feed in the documented Booking.com
+format. Please provide a real export (replace the token in the URL and any notes) before Stage 3, which parses
+reservations from it.
+
+### Q-19 (REQ-02, REQ-14): Language change takes effect where?
+**Status:** INFO
+
+In Stage 2 the language chosen in the profile is saved on the backend (used for SMS, REQ-14). Switching the
+app UI language immediately is part of Stage 6 (REQ-14); until then the UI follows the system language.
 
 ## External/Product decisions (not blocking implementation)
 

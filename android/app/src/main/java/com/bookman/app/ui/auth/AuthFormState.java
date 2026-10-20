@@ -1,5 +1,7 @@
 package com.bookman.app.ui.auth;
 
+import com.bookman.app.ui.common.FieldError;
+
 import androidx.annotation.Nullable;
 
 /** Immutable snapshot of a login/registration screen. */

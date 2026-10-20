@@ -5,6 +5,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
+import com.bookman.app.ui.common.FieldError;
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule;
 import com.bookman.app.common.AppError;
 import com.bookman.app.common.DeviceLanguage;
