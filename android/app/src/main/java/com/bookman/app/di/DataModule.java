@@ -3,6 +3,7 @@ package com.bookman.app.di;
 import android.content.Context;
 import com.bookman.app.data.api.ApartmentApi;
 import com.bookman.app.data.api.AuthApi;
+import com.bookman.app.data.api.DeviceApi;
 import com.bookman.app.data.api.MemberApi;
 import com.bookman.app.data.api.ReservationApi;
 import com.bookman.app.data.api.UserApi;
@@ -10,6 +11,8 @@ import com.bookman.app.data.apartment.ApartmentRepository;
 import com.bookman.app.data.apartment.ApartmentRepositoryImpl;
 import com.bookman.app.data.auth.AuthRepository;
 import com.bookman.app.data.auth.AuthRepositoryImpl;
+import com.bookman.app.data.device.DeviceRepository;
+import com.bookman.app.data.device.DeviceRepositoryImpl;
 import com.bookman.app.data.member.MemberRepository;
 import com.bookman.app.data.member.MemberRepositoryImpl;
 import com.bookman.app.data.profile.ProfileRepository;
@@ -18,6 +21,9 @@ import com.bookman.app.data.reservation.ReservationRepositoryImpl;
 import com.bookman.app.data.profile.ProfileRepositoryImpl;
 import com.bookman.app.data.session.SessionStore;
 import com.bookman.app.data.session.SharedPrefsSessionStore;
+import com.bookman.app.push.FirebasePushTokenProvider;
+import com.bookman.app.push.PushRegistrar;
+import com.bookman.app.push.SharedPrefsPushTokenStore;
 import dagger.Module;
 import dagger.Provides;
 import dagger.hilt.InstallIn;
@@ -48,8 +54,22 @@ public final class DataModule {
 
     @Provides
     @Singleton
-    static AuthRepository authRepository(AuthApi api, SessionStore sessionStore, Executor io) {
-        return new AuthRepositoryImpl(api, sessionStore, io);
+    static AuthRepository authRepository(AuthApi api, SessionStore sessionStore, Executor io, PushRegistrar push) {
+        return new AuthRepositoryImpl(api, sessionStore, io, push);
+    }
+
+    @Provides
+    @Singleton
+    static DeviceRepository deviceRepository(DeviceApi api, Executor io) {
+        return new DeviceRepositoryImpl(api, io);
+    }
+
+    @Provides
+    @Singleton
+    static PushRegistrar pushRegistrar(@ApplicationContext Context context, DeviceRepository devices,
+            SessionStore sessionStore) {
+        return new PushRegistrar(new FirebasePushTokenProvider(context), devices,
+                new SharedPrefsPushTokenStore(context), sessionStore);
     }
 
     @Provides

@@ -10,6 +10,9 @@ pluginManagement {
             if (requested.id.id == "com.google.dagger.hilt.android") {
                 useModule("com.google.dagger:hilt-android-gradle-plugin:${requested.version}")
             }
+            if (requested.id.id == "com.google.gms.google-services") {
+                useModule("com.google.gms:google-services:${requested.version}")
+            }
         }
     }
 }

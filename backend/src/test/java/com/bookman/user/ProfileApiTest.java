@@ -47,4 +47,14 @@ class ProfileApiTest extends IntegrationTest {
                 .andExpect(status().isBadRequest());
         call(anna, get("/api/users/me"), null).andExpect(jsonPath("$.phoneNumber").value("+48600100200"));
     }
+
+    @Test
+    void REQ02_phoneNumberCanBeRemoved() throws Exception {
+        TestUser anna = registerUser("anna@example.com");
+
+        call(anna, put("/api/users/me"), Map.of("language", "PL"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.phoneNumber").doesNotExist())
+                .andExpect(jsonPath("$.language").value("PL"));
+    }
 }

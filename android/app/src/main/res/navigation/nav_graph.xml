@@ -79,6 +79,9 @@
         <action
             android:id="@+id/action_detail_to_members"
             app:destination="@id/membersFragment" />
+        <action
+            android:id="@+id/action_detail_to_reminders"
+            app:destination="@id/notificationSettingsFragment" />
     </fragment>
 
     <fragment
@@ -107,6 +110,15 @@
         android:id="@+id/invitationsFragment"
         android:name="com.bookman.app.ui.member.InvitationsFragment"
         android:label="@string/title_invitations" />
+
+    <fragment
+        android:id="@+id/notificationSettingsFragment"
+        android:name="com.bookman.app.ui.notification.NotificationSettingsFragment"
+        android:label="@string/title_reminders">
+        <argument
+            android:name="apartmentId"
+            app:argType="long" />
+    </fragment>
 
     <fragment
         android:id="@+id/profileFragment"

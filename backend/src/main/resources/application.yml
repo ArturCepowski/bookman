@@ -15,6 +15,11 @@ spring:
       ddl-auto: validate
   flyway:
     enabled: true
+  messages:
+    # Reminder texts (REQ-11/12/14): reminders.properties (English) and reminders_pl.properties.
+    basename: reminders
+    encoding: UTF-8
+    fallback-to-system-locale: false
 
 bookman:
   jwt:
@@ -27,3 +32,14 @@ bookman:
     interval: ${BOOKMAN_IMPORT_INTERVAL:PT30M}
     initial-delay: PT1M
     scheduler-enabled: true
+  reminders:
+    scheduler-enabled: true
+    planner-interval: PT1M
+    dispatcher-interval: PT10S
+  push:
+    # Q-24: "log" (development, default – nothing is sent) or "fcm" (Firebase Cloud Messaging).
+    provider: ${BOOKMAN_PUSH_PROVIDER:log}
+    fcm:
+      # Path to the Firebase service-account JSON key; keep it outside the repository.
+      credentials: ${BOOKMAN_FCM_CREDENTIALS:}
+      url: https://fcm.googleapis.com

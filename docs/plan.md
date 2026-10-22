@@ -1,6 +1,6 @@
 # Bookman – Implementation Plan
 
-**Project Status:** Stages 1–4 done  
+**Project Status:** Stages 1–5 done  
 **Last updated:** 2026-10-20
 
 ---
@@ -62,7 +62,7 @@ Each stage includes automated tests for all implemented requirements.
 |---|---|
 | Register with e-mail, password, phone | `AuthApiTest.REQ01_registerReturnsTokenAndStoresUser`, `RegisterViewModelTest.REQ01_*` |
 | E-mail unique, case-insensitive, error shown | `AuthApiTest.REQ01_duplicateEmailIsRejectedCaseInsensitively`, `AuthRepositoryImplTest.REQ01_duplicateEmailMapsToEmailTaken`, `RegisterViewModelTest.REQ01_existingEmailShowsError` |
-| Phone required, E.164 | `AuthApiTest.REQ01_phoneNumberMustBeE164`, `AuthApiTest.REQ01_phoneNumberIsRequired`, `RegistrationFormTest.REQ01_phoneMustBeE164` |
+| Phone optional (Q-24 follow-up), E.164 when given | `AuthApiTest.REQ01_phoneNumberMustBeE164`, `AuthApiTest.REQ01_phoneNumberIsOptional`, `RegistrationFormTest.REQ01_phoneMustBeE164`, `RegistrationFormTest.REQ01_phoneNumberIsOptional`, `RegisterViewModelTest.REQ01_registrationWithoutPhoneNumberIsSent` |
 | Login | `AuthApiTest.REQ01_loginWithCorrectCredentialsReturnsToken`, `AuthApiTest.REQ01_loginWithWrongPasswordOrUnknownEmailFails`, `LoginViewModelTest.REQ01_*` |
 | Stays logged in until logout / expiry | `AuthApiTest.REQ01_tokenKeepsUserLoggedIn`, `AuthApiTest.REQ01_expiredSessionIsRejected`, `JwtServiceTest.REQ01_tokenIsValidUntilTtlThenExpires`, `ApartmentListViewModelTest.REQ01_expiredSessionIsReported`, `ApartmentListViewModelTest.REQ01_logoutEndsSession`, `ProfileRepositoryImplTest.REQ01_expiredSessionIsClearedAndReported` |
 | Logged-in user sees apartment list | Stage 2: the apartment list (REQ-03) is the start screen for a stored session |
@@ -109,7 +109,7 @@ Manual (owner): run backend locally, start the debug app on an emulator, registe
 ### Acceptance criteria verification
 | Criterion | Verified by |
 |---|---|
-| REQ-02 view/edit phone + language, saved on backend | `ProfileApiTest.REQ02_userCanViewAndEditPhoneAndLanguage`, `ProfileViewModelTest.REQ02_*`, `ProfileRepositoryImplTest.REQ02_*` |
+| REQ-02 view/edit phone + language, saved on backend; phone can be removed (Q-24 follow-up) | `ProfileApiTest.REQ02_userCanViewAndEditPhoneAndLanguage`, `ProfileApiTest.REQ02_phoneNumberCanBeRemoved`, `ProfileViewModelTest.REQ02_*`, `ProfileRepositoryImplTest.REQ02_*` |
 | REQ-02 e-mail cannot be changed | `ProfileApiTest.REQ02_emailCannotBeChanged` |
 | REQ-03 list with name + role, different roles per apartment | `ApartmentApiTest.REQ03_listShowsOnlyMyApartmentsWithMyRole`, `ApartmentListViewModelTest.REQ03_showsApartmentsWithRoles` |
 | REQ-03 empty state | `ApartmentApiTest.REQ03_newUserHasEmptyList`, `ApartmentListViewModelTest.REQ03_emptyStateOnlyAfterSuccessfulEmptyLoad` |
@@ -242,44 +242,64 @@ invite an e-mail without an account, then register with it → invitation appear
 
 ---
 
-## Stage 5: Notifications and SMS reminders
+## Stage 5: Reminders (push notifications)
 
-**Objective:** SMS reminders are sent for upcoming and unfinished cleaning.
+**Status:** ✅ Done
+**Objective:** Phones of the admin and the cleaning service are reminded about unplanned and unfinished cleanings.
+**Owner decision Q-24:** reminders are push notifications to the Bookman app (Firebase Cloud Messaging), not SMS.
 
 ### Requirements implemented
-- **REQ-11:** "Not planned" SMS (check-out = tomorrow, status = NOT_PLANNED)
-- **REQ-12:** "Not done" SMS (check-out = today, status ≠ DONE)
-- **REQ-13:** SMS sending (interface-based, dev logs, production provider via env vars)
+- **REQ-11:** "Not planned" reminder – check-out tomorrow, status `NOT_PLANNED`
+- **REQ-12:** "Not done" reminder – check-out today, status not `DONE` (and not `PRIVATE`, Q-20)
+- **REQ-13 (as changed by Q-24):** sending through `PushSender` (development logger, FCM via env vars, 3 retries)
+- **REQ-14 (part):** reminder text in each recipient's profile language
 
 ### Implementation checklist
 
 #### Backend
-- [ ] `SmsSender` interface (dev and production implementations)
-- [ ] SMS provider configuration (environment variables for API key, account)
-- [ ] `SmsLog` entity (apartment_id, reservation_id, recipient_id, reminder_type, sent_at)
-- [ ] `@Scheduled` jobs for REQ-11 and REQ-12 (run at configured times)
-- [ ] Idempotency check: don't send duplicate SMS same day (check SmsLog)
-- [ ] Retry mechanism: up to 3 retries on failure with exponential backoff
-- [ ] SMS templates with apartment name and check-out date
-- [ ] Localization: SMS text in user's language (from user profile)
-- [ ] `GET /apartments/{id}/notification-settings` endpoint (read)
-- [ ] `PUT /apartments/{id}/notification-settings` endpoint (update times, ADMIN only)
-- [ ] Flyway migration: create SmsLog, NotificationSettings tables
-- [ ] Tests for reminder scheduling, idempotency, retries, localization
+- [x] Flyway `V6__sms_reminders.sql` (reminder hours on `apartment`, `TIME`, NULL = off) and
+      `V7__push_notifications.sql` (`device_token`, `reminder_notification` with unique
+      `(reservation, recipient, type, day)`, status PENDING/SENT/FAILED/NO_DEVICE) – Q-11, Q-24
+- [x] `V8__optional_phone_number.sql` – phone number optional in REQ-01/REQ-02 (owner decision, Q-24 follow-up);
+      app labels the field "(optional)" and an empty field removes the number
+- [x] `GET/PUT /api/apartments/{id}/notification-settings` (`"HH:MM"` or null), ADMIN only (REQ-05)
+- [x] `POST /api/users/me/devices` and `…/devices/unregister` – the app registers its FCM token after login and
+      removes it on logout; a token belongs to the last user who logged in on that phone
+- [x] `ReminderPlanner` (every minute): due reminders (apartment time zone, within one hour) are queued per recipient
+      and reservation with `INSERT … ON CONFLICT DO NOTHING`
+- [x] `ReminderDispatcher` (every 10 s): sends to all phones of the recipient; on failure logs and retries after
+      2 s / 4 s / 8 s, then `FAILED`; tokens FCM reports as unregistered are deleted; no phone → `NO_DEVICE`
+- [x] `PushSender`: `LoggingPushSender` (default) and `FcmPushSender` (`BOOKMAN_PUSH_PROVIDER=fcm`,
+      `BOOKMAN_FCM_CREDENTIALS` = path to the service-account JSON)
+- [x] Texts in `reminders.properties` / `reminders_pl.properties` (title + apartment name + check-out date)
 
 #### Android
-- [ ] Notification settings screen (ADMIN only)
-- [ ] Time picker for REQ-11 and REQ-12 reminder hours
-- [ ] Enable/disable toggles for each reminder type
-- [ ] Display current settings
+- [x] Firebase Messaging; `google-services.json` is optional and git-ignored – without it the app builds and runs
+      without notifications (see CLAUDE.md "Push notifications")
+- [x] `PushRegistrar`: registers the token after login, on app start and on token rotation; unregisters on logout
+- [x] Notification channel "Cleaning reminders", notifications also shown while the app is open, Android 13+
+      notification permission requested once on the apartment list
+- [x] Apartment details (admin) → ⋮ **Cleaning reminders**: two switches with 24 h time pickers
 
 ### Acceptance criteria verification
-- Backend: `cd backend && ./gradlew build` passes
-- Android: `cd android && ./gradlew assembleDebug testDebugUnitTest lint` passes
-- Tests: `REQ11_notPlannedSms`, `REQ12_notDoneSms`, `REQ13_smsSending`, `REQ13_smsRetry`, `REQ13_noSmsDuplicates`
-- Manual: set reminder time, observe logs (dev mode), verify idempotency
+| Criterion | Verified by |
+|---|---|
+| REQ-11 at the set hour, check-out tomorrow, NOT_PLANNED, to all recipients' phones | `ReminderNotificationTest.REQ11_notPlannedReminderAtConfiguredHourForTomorrowsCheckOut`, `…REQ11_everyPhoneOfARecipientGetsIt`, `…REQ11_onlyNotPlannedReservationsAreReminded` |
+| REQ-11/12 one per recipient per reservation per day (retry/restart) | `ReminderNotificationTest.REQ11_oneReminderPerRecipientPerReservationPerDayEvenAfterRestart` |
+| REQ-11/12 contains apartment name and check-out date | `ReminderNotificationTest.REQ11_notPlannedReminder…`, `…REQ12_notDoneReminder…` |
+| REQ-11/12 can be disabled; settings admin-only | `ReminderNotificationTest.REQ11_disabledReminderSendsNothing`, `…REQ11_settingsAreAdminOnlyAndValidated`, `NotificationSettingsViewModelTest.*` |
+| REQ-12 check-out today, not DONE | `ReminderNotificationTest.REQ12_notDoneReminderForTodaysCheckOutUnlessDoneOrPrivate` |
+| REQ-11/12 in the apartment's time zone | `ReminderNotificationTest.REQ12_hourIsInTheApartmentsTimeZone`, `…REQ11_missedHourIsCaughtUpWithinOneHourOnly` |
+| Phones registered per logged-in user (Q-24) | `DeviceApiTest.REQ11_*`, `PushRegistrarTest.REQ11_*`, `DeviceRepositoryImplTest.REQ11_*`, `AuthRepositoryImplTest.REQ11_loginAndLogoutNotifyPushRegistration` |
+| REQ-13 development implementation logs | `PushConfigTest.REQ13_developmentDefaultOnlyLogs` |
+| REQ-13 production provider via env vars | `PushConfigTest.REQ13_fcmWithoutCredentialsFailsFastAtStartup`, `FcmPushSenderTest.REQ13_*` (local stand-in for FCM) |
+| REQ-13 failures logged and retried at most 3 times | `ReminderNotificationTest.REQ13_failedSendIsRetriedAtMostThreeTimes`, `…REQ13_temporaryFailureIsSentOnRetry`, `…REQ13_invalidDeviceTokenIsForgottenAndUserWithoutPhoneIsNotRetried` |
+| REQ-14 reminder in the recipient's language | `ReminderNotificationTest.REQ11_notPlannedReminder…` (EN and PL recipient) |
 
-**Assumption (REQ-13):** Retries are deferred with exponential backoff (2s, 4s, 8s) to avoid blocking the scheduler.
+Commands: `cd backend && ./gradlew build` (98 tests), `cd android && ./gradlew assembleDebug testDebugUnitTest lint` (83 tests, lint clean; also builds with a `google-services.json`).
+Manual (owner): set up Firebase (CLAUDE.md "Push notifications"), run backend with `BOOKMAN_PUSH_PROVIDER=fcm`,
+log in on the emulator (Google Play image), allow notifications, set a reminder to the next minute → notification.
+Without Firebase: the backend log shows `Push (not sent, development mode) …`.
 
 ---
 
@@ -363,5 +383,5 @@ After each stage is merged:
 | 2. Apartments | ✅ Done | `claude/hopeful-brahmagupta-3cr7bc-stage2` | [#3](https://github.com/ArturCepowski/bookman/pull/3) |
 | 3. Reservations | ✅ Done | `claude/hopeful-brahmagupta-3cr7bc` | [#4](https://github.com/ArturCepowski/bookman/pull/4) |
 | 4. Invitations | ✅ Done | `claude/hopeful-brahmagupta-3cr7bc` | [#5](https://github.com/ArturCepowski/bookman/pull/5) |
-| 5. Notifications | ⏳ Planned | TBD | TBD |
+| 5. Notifications | ✅ Done | `claude/hopeful-brahmagupta-3cr7bc` | [#6](https://github.com/ArturCepowski/bookman/pull/6) |
 | 6. Localization | ⏳ Planned | TBD | TBD |

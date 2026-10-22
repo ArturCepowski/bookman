@@ -15,4 +15,9 @@ public interface ApartmentRepository {
     void update(long id, ApartmentInput input, Consumer<Result<ApartmentDetails>> callback);
 
     void delete(long id, Consumer<Result<Boolean>> callback);
+
+    /** REQ-11/12 (admin only) */
+    void notificationSettings(long id, Consumer<Result<NotificationSettings>> callback);
+
+    void updateNotificationSettings(long id, NotificationSettings settings, Consumer<Result<NotificationSettings>> callback);
 }

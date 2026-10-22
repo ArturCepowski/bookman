@@ -9,6 +9,7 @@ import com.bookman.app.common.Result;
 import com.bookman.app.data.api.AuthApi;
 import com.bookman.app.data.api.AuthInterceptor;
 import com.bookman.app.fakes.InMemorySessionStore;
+import com.bookman.app.fakes.RecordingSessionListener;
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicReference;
 import okhttp3.OkHttpClient;
@@ -25,6 +26,7 @@ public class AuthRepositoryImplTest {
 
     private final MockWebServer server = new MockWebServer();
     private final InMemorySessionStore session = new InMemorySessionStore();
+    private final RecordingSessionListener listener = new RecordingSessionListener();
     private AuthRepositoryImpl repository;
 
     @Before
@@ -37,7 +39,7 @@ public class AuthRepositoryImplTest {
                 .addConverterFactory(GsonConverterFactory.create())
                 .build()
                 .create(AuthApi.class);
-        repository = new AuthRepositoryImpl(api, session, Runnable::run);
+        repository = new AuthRepositoryImpl(api, session, Runnable::run, listener);
     }
 
     @After
@@ -89,6 +91,18 @@ public class AuthRepositoryImplTest {
         Result<User> result = call(cb -> repository.login("anna@example.com", "secret123", cb));
 
         assertEquals(AppError.NETWORK, result.error());
+    }
+
+    @Test
+    public void REQ11_loginAndLogoutNotifyPushRegistration() {
+        server.enqueue(json(200, "{\"token\":\"t-9\",\"user\":{\"id\":7,\"email\":\"anna@example.com\","
+                + "\"phoneNumber\":\"+48600100200\",\"language\":\"EN\"}}"));
+
+        call(cb -> repository.login("anna@example.com", "secret123", cb));
+        repository.logout();
+
+        assertEquals(java.util.Arrays.asList("in", "out:t-9"), listener.events);
+        assertNull(session.token());
     }
 
     private static MockResponse json(int code, String body) {

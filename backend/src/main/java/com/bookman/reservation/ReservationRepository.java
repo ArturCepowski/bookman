@@ -33,6 +33,16 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
             """)
     ReservationView findView(@Param("id") long id);
 
+    /** REQ-11/12: active reservations of an apartment checking out on {@code checkOut} with one of the statuses. */
+    @Query("""
+            select r from Reservation r
+            where r.apartmentId = :apartmentId and r.cancelledAt is null and r.checkOut = :checkOut
+              and r.cleaningStatus in :statuses
+            order by r.id
+            """)
+    List<Reservation> findForReminder(@Param("apartmentId") long apartmentId, @Param("checkOut") LocalDate checkOut,
+            @Param("statuses") java.util.Collection<CleaningStatus> statuses);
+
     /** Q-13: one import per apartment at a time; false if another import holds the lock. */
     @Query(value = "select pg_try_advisory_xact_lock(:key)", nativeQuery = true)
     boolean tryLockForImport(@Param("key") long key);

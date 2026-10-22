@@ -5,7 +5,7 @@
 
     <string name="label_email">E-mail</string>
     <string name="label_password">Hasło</string>
-    <string name="label_phone">Numer telefonu</string>
+    <string name="label_phone">Numer telefonu (opcjonalnie)</string>
     <string name="hint_phone">Format międzynarodowy, np. +48600100200</string>
     <string name="hint_password">Co najmniej 8 znaków</string>
 
@@ -105,4 +105,14 @@
     <string name="error_invitation_pending">Ten adres e-mail został już zaproszony</string>
     <string name="error_invitation_expired">To zaproszenie wygasło. Poproś właściciela o ponowne zaproszenie.</string>
     <string name="error_cannot_remove_admin">Nie można usunąć administratora mieszkania</string>
+    <string name="title_reminders">Przypomnienia o sprzątaniu</string>
+    <string name="reminders_intro">Powiadomienia trafiają na telefony administratora i całego serwisu sprzątającego (zalogowanych w Bookmanie, z włączonymi powiadomieniami) o wybranej godzinie, w strefie czasowej mieszkania.</string>
+    <string name="reminder_not_planned_title">Sprzątanie niezaplanowane</string>
+    <string name="reminder_not_planned_description">Przypomina o jutrzejszych wyjazdach, których sprzątania nikt jeszcze nie wziął.</string>
+    <string name="reminder_not_done_title">Sprzątanie niewykonane</string>
+    <string name="reminder_not_done_description">Przypomina o dzisiejszych wyjazdach, które nie są jeszcze oznaczone jako posprzątane.</string>
+    <string name="reminder_off">Wyłączone</string>
+    <string name="reminders_saved">Zapisano przypomnienia</string>
+    <string name="notification_channel_reminders">Przypomnienia o sprzątaniu</string>
+    <string name="notification_channel_reminders_description">Sprzątania, które nie są jeszcze zaplanowane lub wykonane</string>
 </resources>

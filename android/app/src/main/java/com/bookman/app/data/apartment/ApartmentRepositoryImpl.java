@@ -6,12 +6,17 @@ import com.bookman.app.data.api.ApartmentApi;
 import com.bookman.app.data.api.ApartmentDto;
 import com.bookman.app.data.api.ApartmentRequestDto;
 import com.bookman.app.data.api.ApiCalls;
+import com.bookman.app.data.api.NotificationSettingsDto;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executor;
 import retrofit2.Call;
 
 public class ApartmentRepositoryImpl implements ApartmentRepository {
+
+    private static final DateTimeFormatter HH_MM = DateTimeFormatter.ofPattern("HH:mm");
 
     private final ApartmentApi api;
     private final Executor io;
@@ -55,6 +60,36 @@ public class ApartmentRepositoryImpl implements ApartmentRepository {
     @Override
     public void delete(long id, Consumer<Result<Boolean>> callback) {
         io.execute(() -> callback.accept(ApiCalls.executeNoContent(api.delete(id))));
+    }
+
+    @Override
+    public void notificationSettings(long id, Consumer<Result<NotificationSettings>> callback) {
+        settings(api.notificationSettings(id), callback);
+    }
+
+    @Override
+    public void updateNotificationSettings(long id, NotificationSettings settings,
+            Consumer<Result<NotificationSettings>> callback) {
+        settings(api.updateNotificationSettings(id,
+                new NotificationSettingsDto(format(settings.notPlannedTime), format(settings.notDoneTime))), callback);
+    }
+
+    private void settings(Call<NotificationSettingsDto> call, Consumer<Result<NotificationSettings>> callback) {
+        io.execute(() -> {
+            Result<NotificationSettingsDto> result = ApiCalls.execute(call);
+            callback.accept(result.isSuccess()
+                    ? Result.success(new NotificationSettings(parse(result.value().notPlannedTime),
+                            parse(result.value().notDoneTime)))
+                    : Result.failure(result.error()));
+        });
+    }
+
+    private static LocalTime parse(String value) {
+        return value == null ? null : LocalTime.parse(value, HH_MM);
+    }
+
+    private static String format(LocalTime value) {
+        return value == null ? null : HH_MM.format(value);
     }
 
     private void details(Call<ApartmentDto> call, Consumer<Result<ApartmentDetails>> callback) {

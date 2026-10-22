@@ -59,12 +59,12 @@ class AuthApiTest extends IntegrationTest {
     }
 
     @Test
-    void REQ01_phoneNumberIsRequired() throws Exception {
+    void REQ01_phoneNumberIsOptional() throws Exception {
         String body = json.writeValueAsString(Map.of(
                 "email", "a@example.com", "password", "secret123", "language", "EN"));
         mvc.perform(post("/api/auth/register").contentType(MediaType.APPLICATION_JSON).content(body))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.fieldErrors.phoneNumber").exists());
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.user.phoneNumber").doesNotExist());
     }
 
     @Test

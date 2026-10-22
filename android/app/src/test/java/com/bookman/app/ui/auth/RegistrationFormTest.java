@@ -23,7 +23,6 @@ public class RegistrationFormTest {
     public void REQ01_phoneMustBeE164() {
         assertEquals(FieldError.PHONE_INVALID, RegistrationForm.of("a@b.pl", "secret123", "600100200").phoneError);
         assertEquals(FieldError.PHONE_INVALID, RegistrationForm.of("a@b.pl", "secret123", "+0600100200").phoneError);
-        assertEquals(FieldError.PHONE_INVALID, RegistrationForm.of("a@b.pl", "secret123", "").phoneError);
         assertEquals(FieldError.PHONE_INVALID,
                 RegistrationForm.of("a@b.pl", "secret123", "+4860010020012345").phoneError);
         assertNull(RegistrationForm.of("a@b.pl", "secret123", "+12025550123").phoneError);
@@ -37,5 +36,14 @@ public class RegistrationFormTest {
         assertEquals(FieldError.EMAIL_INVALID, form.emailError);
         assertEquals(FieldError.PASSWORD_TOO_SHORT, form.passwordError);
         assertNull(form.phoneError);
+    }
+
+    @Test
+    public void REQ01_phoneNumberIsOptional() {
+        RegistrationForm form = RegistrationForm.of("a@b.pl", "secret123", "  ");
+
+        assertNull(form.phoneError);
+        assertNull(form.phoneNumber);
+        assertTrue(form.isValid());
     }
 }
