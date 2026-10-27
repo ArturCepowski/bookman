@@ -9,7 +9,7 @@ public class DeviceLanguageTest {
 
     @Test
     public void REQ14_polishSystemGivesPolishOtherwiseEnglish() {
-        assertEquals("PL", new DeviceLanguage(new Locale("pl", "PL")).code());
+        assertEquals("PL", new DeviceLanguage(Locale.forLanguageTag("pl-PL")).code());
         assertEquals("EN", new DeviceLanguage(Locale.GERMANY).code());
         assertEquals("EN", new DeviceLanguage(Locale.US).code());
     }

@@ -236,6 +236,17 @@ Follow-up – **owner decision:** the phone number in REQ-01 / REQ-02 is now **o
 When given it must still be E.164; an empty field in the profile removes it. Proposed spec change: REQ-01 acceptance
 criteria "phone number (optional, E.164)". Migration `V8__optional_phone_number.sql`.
 
+### Q-25 (NFR, Google Play): Target SDK 36
+**Status:** RESOLVED – owner decision 2026-10-27
+
+Google Play accepts new apps only when they target the API level released within the last year (since 2026-08-31:
+API 36, Android 16). CLAUDE.md fixed `targetSdk/compileSdk 35`; the owner approved raising both to **36**
+(minSdk stays 26). Checked API 36 behaviour changes: no edge-to-edge opt-out and no custom back handling are used
+(Navigation handles predictive back), no orientation locks. The requirement moves every year, so the target SDK
+has to be raised again before each yearly Play deadline.
+Still open for a **public** Play release (not needed for internal testing): a public privacy-policy URL and in-app
+account deletion with a web deletion link (Play policy; not in spec – needs a new requirement).
+
 ## External/Product decisions (not blocking implementation)
 
 These answers are assumed in the spec but require external decision:

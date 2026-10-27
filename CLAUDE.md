@@ -26,7 +26,7 @@
 - Networking: Retrofit + OkHttp + Gson/Moshi.
 - Local cache: Room.
 - DI: Hilt.
-- minSdk 26, targetSdk/compileSdk 35.
+- minSdk 26, targetSdk/compileSdk 36 (Google Play requirement since 2026-08-31, Q-25).
 - Localization: all user-visible strings in `res/values/strings.xml` (English, default) and
   `res/values-pl/strings.xml` (Polish). No hard-coded user-visible strings in Java or XML layouts.
 

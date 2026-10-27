@@ -14,12 +14,12 @@ val releaseApiUrl = (findProperty("bookmanApiUrl") as String?) ?: "https://bookm
 
 android {
     namespace = "com.bookman.app"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.bookman.app"
         minSdk = 26
-        targetSdk = 35
+        targetSdk = 36
         versionCode = 1
         versionName = "0.1.0"
         buildConfigField("String", "API_BASE_URL", "\"$releaseApiUrl\"")

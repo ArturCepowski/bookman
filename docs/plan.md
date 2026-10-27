@@ -47,7 +47,7 @@ Each stage includes automated tests for all implemented requirements.
       in the cloud environment, so Testcontainers was replaced)
 
 #### Android (Java 17, MVVM)
-- [x] Gradle project (AGP 8.13, compileSdk/targetSdk 35, minSdk 26)
+- [x] Gradle project (AGP 8.13, compileSdk/targetSdk 35 → 36 for Google Play, Q-25; minSdk 26)
 - [x] Retrofit + OkHttp, auth interceptor (adds token, clears session on 401)
 - [x] Hilt DI
 - [x] `LoginViewModel`, `RegisterViewModel`, `HomeViewModel` (replaced by the apartment list in Stage 2) + `AuthRepository`

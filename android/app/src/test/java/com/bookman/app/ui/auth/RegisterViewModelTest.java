@@ -23,7 +23,7 @@ public class RegisterViewModelTest {
 
     @Test
     public void REQ01_successfulRegistrationNavigatesHomeWithNormalizedData() {
-        RegisterViewModel vm = new RegisterViewModel(repository, new DeviceLanguage(new Locale("pl", "PL")));
+        RegisterViewModel vm = new RegisterViewModel(repository, new DeviceLanguage(Locale.forLanguageTag("pl-PL")));
 
         vm.register(" Anna@Example.com", "secret123", "+48 600 100 200");
 
