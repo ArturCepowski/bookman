@@ -13,7 +13,8 @@
 ```
 /android    Android client (Gradle project)
 /backend    Server application (Gradle project)
-/docs       spec.md, plan.md, questions.md
+/deploy     production templates (see docs/deployment.md)
+/docs       spec.md, plan.md, questions.md, deployment.md
 ```
 
 ## Stack
@@ -81,9 +82,10 @@ Notes:
 **Backend tests** use embedded PostgreSQL 16 binaries (zonky) – no Docker or running database needed.
 
 **Production:**
-- AWS RDS PostgreSQL 16 (db.t4g.micro)
-- Endpoint: set via environment variable (e.g., `DATABASE_URL`)
-- See Q-06 in `docs/questions.md` for details
+- Oracle Cloud Always Free VM: backend as a systemd service + PostgreSQL 16 on the same machine, HTTPS via Caddy
+  (`https://bookman-artur.duckdns.org/`) – Q-06
+- Guide: `docs/deployment.md`; templates (systemd unit, Caddyfile, env template, backup, deploy script) in `/deploy`
+- Secrets only in `/etc/bookman/bookman.env` on the server, never in the repository
 
 ### Push notifications (Firebase Cloud Messaging, Q-24)
 1. Create a project at https://console.firebase.google.com (free) and add an **Android app** with package

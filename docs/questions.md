@@ -126,14 +126,12 @@
   - Connection: `localhost:5432`, user `bookman`, password `bookman_dev_password`, DB `bookman`
   - Backend `.env` points to this during development
   - Data persisted in `postgres_data` volume; `docker-compose down` preserves it
-- **Production:** AWS RDS PostgreSQL 16
-  - Instance class: `db.t4g.micro` (smallest, sufficient for v1)
-  - Multi-AZ: false (can enable later)
-  - Backup retention: 7 days (default)
-  - Publicly accessible: false (access only from VPC/security group)
-  - VPC: same VPC as backend (Spring Boot app will run on EC2 or ECS in same VPC)
-  - Connection via endpoint: e.g., `bookman-postgres.c9akciq32.eu-west-1.rds.amazonaws.com:5432`
-  - Backend production `.env` reads from environment variable `DATABASE_URL` (or similar)
+- **Production – owner decision 2026-10-27 (replaces the earlier AWS RDS plan, too expensive for v1):**
+  Oracle Cloud *Always Free* VM (Arm, Ubuntu 24.04, Frankfurt) running the backend **and** PostgreSQL 16
+  (listening on localhost only), HTTPS via Caddy + Let's Encrypt on the DuckDNS domain
+  `bookman-artur.duckdns.org`, daily `pg_dump` backups kept 14 days. Cost: 0. Step-by-step guide and templates:
+  `docs/deployment.md`, `/deploy`. Hosts that scale to zero are unsuitable because the schedulers must run all
+  the time.
 - Flyway migrations run on backend startup (Spring Boot + Flyway auto-config).
 
 ### Q-15 (REQ-01): Password policy, session length, logout

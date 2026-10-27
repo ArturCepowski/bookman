@@ -1,7 +1,7 @@
 # Bookman – Implementation Plan
 
 **Project Status:** Stages 1–5 done  
-**Last updated:** 2026-10-20
+**Last updated:** 2026-10-27
 
 ---
 
@@ -385,3 +385,7 @@ After each stage is merged:
 | 4. Invitations | ✅ Done | `claude/hopeful-brahmagupta-3cr7bc` | [#5](https://github.com/ArturCepowski/bookman/pull/5) |
 | 5. Notifications | ✅ Done | `claude/hopeful-brahmagupta-3cr7bc` | [#6](https://github.com/ArturCepowski/bookman/pull/6) |
 | 6. Localization | ⏳ Planned | TBD | TBD |
+| Release & deployment (not a spec stage: SDK 36, Q-25; hosting, Q-06) | ✅ Done | `claude/hopeful-brahmagupta-3cr7bc` | [#7](https://github.com/ArturCepowski/bookman/pull/7) |
+
+Production runs on an Oracle Always Free VM (`docs/deployment.md`); releases go to the Google Play internal
+testing track. Before every Play upload raise `bookmanVersionCode` in `android/gradle.properties`.

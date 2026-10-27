@@ -1,0 +1,5 @@
+# /etc/caddy/Caddyfile – HTTPS with an automatic Let's Encrypt certificate (docs/deployment.md).
+# Ports 80 and 443 must be open in the Oracle security list and in the Ubuntu iptables rules.
+bookman-artur.duckdns.org {
+    reverse_proxy 127.0.0.1:8080
+}
