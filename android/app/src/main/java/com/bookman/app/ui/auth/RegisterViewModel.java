@@ -4,6 +4,7 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 import com.bookman.app.common.AppError;
+import com.bookman.app.common.AppLanguage;
 import com.bookman.app.common.DeviceLanguage;
 import com.bookman.app.common.Event;
 import com.bookman.app.data.auth.AuthRepository;
@@ -15,14 +16,16 @@ public class RegisterViewModel extends ViewModel {
 
     private final AuthRepository repository;
     private final DeviceLanguage deviceLanguage;
+    private final AppLanguage appLanguage;
     private final MutableLiveData<AuthFormState> state = new MutableLiveData<>(AuthFormState.idle());
     private final MutableLiveData<Event<AppError>> errors = new MutableLiveData<>();
     private final MutableLiveData<Event<Boolean>> registered = new MutableLiveData<>();
 
     @Inject
-    public RegisterViewModel(AuthRepository repository, DeviceLanguage deviceLanguage) {
+    public RegisterViewModel(AuthRepository repository, DeviceLanguage deviceLanguage, AppLanguage appLanguage) {
         this.repository = repository;
         this.deviceLanguage = deviceLanguage;
+        this.appLanguage = appLanguage;
     }
 
     public LiveData<AuthFormState> state() {
@@ -51,6 +54,8 @@ public class RegisterViewModel extends ViewModel {
         repository.register(form.email, form.password, form.phoneNumber, deviceLanguage.code(), result -> {
             state.postValue(AuthFormState.idle());
             if (result.isSuccess()) {
+                // REQ-14: from now on the profile language decides (initially the device language).
+                appLanguage.apply(result.value().language());
                 registered.postValue(new Event<>(true));
             } else {
                 errors.postValue(new Event<>(result.error()));

@@ -10,8 +10,11 @@ import androidx.arch.core.executor.testing.InstantTaskExecutorRule;
 import com.bookman.app.common.AppError;
 import com.bookman.app.common.DeviceLanguage;
 import com.bookman.app.common.Result;
+import com.bookman.app.fakes.FakeAppLanguage;
 import com.bookman.app.fakes.FakeAuthRepository;
 import java.util.Locale;
+import com.bookman.app.data.auth.User;
+import java.util.List;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -19,11 +22,12 @@ public class RegisterViewModelTest {
 
     @Rule public InstantTaskExecutorRule instant = new InstantTaskExecutorRule();
 
+    private final FakeAppLanguage appLanguage = new FakeAppLanguage();
     private final FakeAuthRepository repository = new FakeAuthRepository();
 
     @Test
     public void REQ01_successfulRegistrationNavigatesHomeWithNormalizedData() {
-        RegisterViewModel vm = new RegisterViewModel(repository, new DeviceLanguage(Locale.forLanguageTag("pl-PL")));
+        RegisterViewModel vm = new RegisterViewModel(repository, new DeviceLanguage(Locale.forLanguageTag("pl-PL")), appLanguage);
 
         vm.register(" Anna@Example.com", "secret123", "+48 600 100 200");
 
@@ -36,7 +40,7 @@ public class RegisterViewModelTest {
 
     @Test
     public void REQ01_invalidInputIsNotSentToBackend() {
-        RegisterViewModel vm = new RegisterViewModel(repository, new DeviceLanguage(Locale.ENGLISH));
+        RegisterViewModel vm = new RegisterViewModel(repository, new DeviceLanguage(Locale.ENGLISH), appLanguage);
 
         vm.register("anna@example.com", "secret123", "600100200");
 
@@ -48,7 +52,7 @@ public class RegisterViewModelTest {
     @Test
     public void REQ01_existingEmailShowsError() {
         repository.nextResult = Result.failure(AppError.EMAIL_TAKEN);
-        RegisterViewModel vm = new RegisterViewModel(repository, new DeviceLanguage(Locale.ENGLISH));
+        RegisterViewModel vm = new RegisterViewModel(repository, new DeviceLanguage(Locale.ENGLISH), appLanguage);
 
         vm.register("anna@example.com", "secret123", "+48600100200");
 
@@ -58,12 +62,24 @@ public class RegisterViewModelTest {
 
     @Test
     public void REQ01_registrationWithoutPhoneNumberIsSent() {
-        RegisterViewModel vm = new RegisterViewModel(repository, new DeviceLanguage(Locale.ENGLISH));
+        RegisterViewModel vm = new RegisterViewModel(repository, new DeviceLanguage(Locale.ENGLISH), appLanguage);
 
         vm.register("anna@example.com", "secret123", "");
 
         assertEquals(1, repository.calls);
         assertNull(repository.lastPhone);
         assertNotNull(vm.registered().getValue().consume());
+    }
+
+    @Test
+    public void REQ14_newAccountGetsTheSystemLanguageAndTheAppUsesIt() {
+        repository.nextResult = Result.success(new User(1, "anna@example.com", null, "PL"));
+        RegisterViewModel vm = new RegisterViewModel(repository, new DeviceLanguage(Locale.forLanguageTag("pl-PL")),
+                appLanguage);
+
+        vm.register("anna@example.com", "secret123", "");
+
+        assertEquals("PL", repository.lastLanguage);
+        assertEquals(List.of("PL"), appLanguage.applied);
     }
 }

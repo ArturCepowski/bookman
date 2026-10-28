@@ -1,6 +1,8 @@
 package com.bookman.app.di;
 
 import android.content.Context;
+import com.bookman.app.common.AppCompatAppLanguage;
+import com.bookman.app.common.AppLanguage;
 import com.bookman.app.data.api.ApartmentApi;
 import com.bookman.app.data.api.AuthApi;
 import com.bookman.app.data.api.DeviceApi;
@@ -56,6 +58,12 @@ public final class DataModule {
     @Singleton
     static AuthRepository authRepository(AuthApi api, SessionStore sessionStore, Executor io, PushRegistrar push) {
         return new AuthRepositoryImpl(api, sessionStore, io, push);
+    }
+
+    @Provides
+    @Singleton
+    static AppLanguage appLanguage() {
+        return new AppCompatAppLanguage();
     }
 
     @Provides

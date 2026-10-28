@@ -1,6 +1,6 @@
 # Bookman – Implementation Plan
 
-**Project Status:** Stages 1–5 done  
+**Project Status:** Stages 1–6 done  
 **Last updated:** 2026-10-27
 
 ---
@@ -12,7 +12,7 @@ Bookman is implemented in 6 stages, each delivering a working, buildable system:
 2. **Apartments and apartment management** – user can create apartments and see their list
 3. **Reservations and cleaning status** – imports from Booking.com and tracks cleaning progress
 4. **Invitations and role management** – allows adding cleaning service members
-5. **Notifications and SMS reminders** – sends timely SMS alerts
+5. **Notifications and reminders** – push reminders about cleanings (Q-24)
 6. **Localization** – Polish/English support throughout
 
 Each stage includes automated tests for all implemented requirements.
@@ -305,33 +305,45 @@ Without Firebase: the backend log shows `Push (not sent, development mode) …`.
 
 ## Stage 6: Localization (Polish and English)
 
-**Objective:** App and SMS are available in Polish and English.
+**Status:** ✅ Done
+
+**Objective:** App and reminders are available in Polish and English.
 
 ### Requirements implemented
-- **REQ-14:** Polish (pl) and English (en) support with system language detection
+- **REQ-14:** Polish (pl) and English (en), system language on first start, switch in the app settings applies
+  immediately, the language is stored in the profile and used for the user's reminders (push since Q-24)
 
 ### Implementation checklist
 
 #### Backend
-- [ ] SMS templates: Polish and English versions
-- [ ] Locale detection in SMS job based on user's language preference
-- [ ] Database: language field in User entity (set during registration/profile update)
-- [ ] Tests for SMS generation in both languages
+- [x] `language` (EN/PL) on the user, set at registration and in the profile (Stage 1/2)
+- [x] Reminder texts in English and Polish (`reminders*.properties`), chosen per recipient (Stage 5)
+- [x] `ReminderTextsTest.REQ14_*`
 
 #### Android
-- [ ] `res/values/strings.xml` (English)
-- [ ] `res/values-pl/strings.xml` (Polish)
-- [ ] All UI strings moved to resources (no hardcoded text)
-- [ ] Language picker in settings (tied to UserProfile)
-- [ ] System language detection on first launch
-- [ ] Apply language change immediately (re-create activity or use LocalizationUtil)
-- [ ] Unit tests for language switching
+- [x] All user-visible strings in `values/strings.xml` and `values-pl/strings.xml`; lint `HardcodedText` and
+      `MissingTranslation` clean; `TranslationsTest` checks both files have the same keys
+- [x] First start: the system language decides through resource fallback (Polish system → Polish, otherwise
+      English); registration stores the device language (`DeviceLanguage`)
+- [x] `AppLanguage` / `AppCompatAppLanguage`: per-app language via `AppCompatDelegate.setApplicationLocales`,
+      applied after login/registration (profile language) and after saving the profile – activities are recreated,
+      no reinstall; persisted by `AppLocalesMetadataHolderService` (Android ≤ 12) or the system (Android 13+,
+      `locales_config.xml` also lists the app in the system's per-app language settings)
+- [x] Notification channel name follows the in-app language
+- [x] Q-26: sync points and behaviour after logout
 
 ### Acceptance criteria verification
-- Backend: `cd backend && ./gradlew build` passes
-- Android: `cd android && ./gradlew assembleDebug testDebugUnitTest lint` passes
-- Tests: `REQ14_polishAndEnglish`, `REQ14_systemLanguageDetection`
-- Manual: change system language, restart app, see Polish/English; change in-app language, see immediate change
+| Criterion | Tests |
+|---|---|
+| First start follows system language | `DeviceLanguageTest.REQ14_polishSystemGivesPolishOtherwiseEnglish`, `RegisterViewModelTest.REQ14_newAccountGetsTheSystemLanguageAndTheAppUsesIt` |
+| Switch in settings applies immediately, stored on backend | `ProfileViewModelTest.REQ14_languageChangeInSettingsAppliesImmediately`, `…REQ14_languageIsNotChangedWhenSavingFails`, `ProfileApiTest.REQ02_userCanViewAndEditPhoneAndLanguage` |
+| Profile language used after login | `LoginViewModelTest.REQ14_profileLanguageIsAppliedAfterLogin`, `…REQ14_failedLoginKeepsTheLanguage` |
+| Both languages complete | `TranslationsTest.REQ14_everyEnglishStringHasAPolishTranslation`, `TranslationsTest.REQ14_languageCodesMapToLocales` |
+| Reminders in the user's language | `ReminderTextsTest.REQ14_reminderTextsInEnglishAndPolish`, `ReminderNotificationTest.REQ11_notPlannedReminderAtConfiguredHourForTomorrowsCheckOut` |
+
+Manual (owner): fresh install on a Polish and on an English emulator → login screen in that language; Profile →
+switch language → Save → the whole app switches at once; restart the app → language kept; log in on another
+device → profile language applied.
 
 ---
 
@@ -384,7 +396,7 @@ After each stage is merged:
 | 3. Reservations | ✅ Done | `claude/hopeful-brahmagupta-3cr7bc` | [#4](https://github.com/ArturCepowski/bookman/pull/4) |
 | 4. Invitations | ✅ Done | `claude/hopeful-brahmagupta-3cr7bc` | [#5](https://github.com/ArturCepowski/bookman/pull/5) |
 | 5. Notifications | ✅ Done | `claude/hopeful-brahmagupta-3cr7bc` | [#6](https://github.com/ArturCepowski/bookman/pull/6) |
-| 6. Localization | ⏳ Planned | TBD | TBD |
+| 6. Localization | ✅ Done | `claude/hopeful-brahmagupta-3cr7bc` | [#7](https://github.com/ArturCepowski/bookman/pull/7) (together with release & deployment) |
 | Release & deployment (not a spec stage: SDK 36, Q-25; hosting, Q-06) | ✅ Done | `claude/hopeful-brahmagupta-3cr7bc` | [#7](https://github.com/ArturCepowski/bookman/pull/7) |
 
 Production runs on an Oracle Always Free VM (`docs/deployment.md`); releases go to the Google Play internal

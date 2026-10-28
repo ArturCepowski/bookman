@@ -6,6 +6,7 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 import com.bookman.app.common.AppError;
+import com.bookman.app.common.AppLanguage;
 import com.bookman.app.common.Event;
 import com.bookman.app.data.auth.AuthRepository;
 import dagger.hilt.android.lifecycle.HiltViewModel;
@@ -15,13 +16,15 @@ import javax.inject.Inject;
 public class LoginViewModel extends ViewModel {
 
     private final AuthRepository repository;
+    private final AppLanguage appLanguage;
     private final MutableLiveData<AuthFormState> state = new MutableLiveData<>(AuthFormState.idle());
     private final MutableLiveData<Event<AppError>> errors = new MutableLiveData<>();
     private final MutableLiveData<Event<Boolean>> loggedIn = new MutableLiveData<>();
 
     @Inject
-    public LoginViewModel(AuthRepository repository) {
+    public LoginViewModel(AuthRepository repository, AppLanguage appLanguage) {
         this.repository = repository;
+        this.appLanguage = appLanguage;
     }
 
     public LiveData<AuthFormState> state() {
@@ -53,6 +56,8 @@ public class LoginViewModel extends ViewModel {
         repository.login(normalizedEmail, pass, result -> {
             state.postValue(AuthFormState.idle());
             if (result.isSuccess()) {
+                // REQ-14: the language stored in the profile wins over the device language after login.
+                appLanguage.apply(result.value().language());
                 loggedIn.postValue(new Event<>(true));
             } else {
                 errors.postValue(new Event<>(result.error()));

@@ -48,6 +48,8 @@ public class MainActivity extends AppCompatActivity {
         AppBarConfiguration appBar = new AppBarConfiguration.Builder(R.id.loginFragment, R.id.apartmentListFragment).build();
         NavigationUI.setupActionBarWithNavController(this, navController, appBar);
 
+        // REQ-14: the activity context carries the in-app language, so the channel name follows a language change.
+        ReminderNotifications.createChannel(this);
         if (authRepository.isLoggedIn()) {
             pushRegistrar.registerCurrentDevice();
         }

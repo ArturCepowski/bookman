@@ -245,6 +245,17 @@ has to be raised again before each yearly Play deadline.
 Still open for a **public** Play release (not needed for internal testing): a public privacy-policy URL and in-app
 account deletion with a web deletion link (Play policy; not in spec – needs a new requirement).
 
+### Q-26 (REQ-14): When the app language follows the profile
+**Status:** ASSUMPTION – implemented as below, confirm or change
+
+REQ-14 says the language is chosen in the app settings and stored in the profile, but not when a profile language
+from another device is applied, nor what happens after logout. Implemented:
+- before login the UI follows the system language (Polish system → Polish, otherwise English);
+- after **login** the profile language is applied; after **registration** the profile gets the device language;
+- a change in the **profile screen** applies immediately after the backend saved it;
+- a change made on another device is applied at the next login on this device (not on every app start);
+- after **logout** the app keeps the last language.
+
 ## External/Product decisions (not blocking implementation)
 
 These answers are assumed in the spec but require external decision:
