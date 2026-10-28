@@ -106,8 +106,10 @@ Restore: `sudo -u postgres pg_restore --clean -d bookman <file>.dump` (stop the 
 ## 2. Backend updates
 From the repository root on Windows (latest `main`):
 ```
-.\deploy\deploy-backend.ps1 -Key C:\Users\<you>\.ssh\bookman-oracle.key
+.\deploy\deploy-backend.ps1 -Key C:\Users\<you>\.ssh\bookman-oracle.key      # PowerShell
+deploy\deploy-backend.cmd -Key C:\Users\<you>\.ssh\bookman-oracle.key        # cmd
 ```
+(Started from cmd, a `.ps1` file only opens in Notepad – use the `.cmd` wrapper there.)
 The script runs 5 steps and reports each one (`[n/5] … OK`):
 1. checks prerequisites (repository root, SSH key, `ssh`/`scp`) and shows the deployed branch and commit, with a
    warning for uncommitted changes or a branch other than `main`,
