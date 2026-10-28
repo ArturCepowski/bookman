@@ -13,7 +13,8 @@
 ```
 /android    Android client (Gradle project)
 /backend    Server application (Gradle project)
-/docs       spec.md, plan.md, questions.md
+/deploy     production templates (see docs/deployment.md)
+/docs       spec.md, plan.md, questions.md, deployment.md
 ```
 
 ## Stack
@@ -26,7 +27,7 @@
 - Networking: Retrofit + OkHttp + Gson/Moshi.
 - Local cache: Room.
 - DI: Hilt.
-- minSdk 26, targetSdk/compileSdk 35.
+- minSdk 26, targetSdk/compileSdk 36 (Google Play requirement since 2026-08-31, Q-25).
 - Localization: all user-visible strings in `res/values/strings.xml` (English, default) and
   `res/values-pl/strings.xml` (Polish). No hard-coded user-visible strings in Java or XML layouts.
 
@@ -81,13 +82,14 @@ Notes:
 **Backend tests** use embedded PostgreSQL 16 binaries (zonky) – no Docker or running database needed.
 
 **Production:**
-- AWS RDS PostgreSQL 16 (db.t4g.micro)
-- Endpoint: set via environment variable (e.g., `DATABASE_URL`)
-- See Q-06 in `docs/questions.md` for details
+- Oracle Cloud Always Free VM: backend as a systemd service + PostgreSQL 16 on the same machine, HTTPS via Caddy
+  (`https://bookman-artur.duckdns.org/`) – Q-06
+- Guide: `docs/deployment.md`; templates (systemd unit, Caddyfile, env template, backup, deploy script) in `/deploy`
+- Secrets only in `/etc/bookman/bookman.env` on the server, never in the repository
 
 ### Push notifications (Firebase Cloud Messaging, Q-24)
 1. Create a project at https://console.firebase.google.com (free) and add an **Android app** with package
-   `com.bookman.app`.
+   `com.pl.bookman.app` (the `applicationId`; Java packages stay `com.bookman.app`, Q-27).
 2. Download `google-services.json` into `android/app/` (git-ignored). Without it the app still builds, just without
    notifications.
 3. Backend: Project settings → Service accounts → *Generate new private key*; store the JSON outside the repository and

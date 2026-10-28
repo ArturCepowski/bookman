@@ -5,6 +5,7 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 import com.bookman.app.common.AppError;
+import com.bookman.app.common.AppLanguage;
 import com.bookman.app.common.Event;
 import com.bookman.app.common.Result;
 import com.bookman.app.data.auth.User;
@@ -14,11 +15,12 @@ import com.bookman.app.ui.common.PhoneNumbers;
 import dagger.hilt.android.lifecycle.HiltViewModel;
 import javax.inject.Inject;
 
-/** REQ-02: view and edit phone number and preferred language; e-mail is read-only. */
+/** REQ-02: view and edit phone number and preferred language (REQ-14); e-mail is read-only. */
 @HiltViewModel
 public class ProfileViewModel extends ViewModel {
 
     private final ProfileRepository repository;
+    private final AppLanguage appLanguage;
     private final MutableLiveData<User> profile = new MutableLiveData<>();
     private final MutableLiveData<Boolean> loading = new MutableLiveData<>(false);
     private final MutableLiveData<FieldError> phoneError = new MutableLiveData<>();
@@ -26,8 +28,9 @@ public class ProfileViewModel extends ViewModel {
     private final MutableLiveData<Event<Boolean>> saved = new MutableLiveData<>();
 
     @Inject
-    public ProfileViewModel(ProfileRepository repository) {
+    public ProfileViewModel(ProfileRepository repository, AppLanguage appLanguage) {
         this.repository = repository;
+        this.appLanguage = appLanguage;
         loading.setValue(true);
         repository.load(this::onProfile);
     }
@@ -68,6 +71,8 @@ public class ProfileViewModel extends ViewModel {
         repository.update(normalized, language, result -> {
             onProfile(result);
             if (result.isSuccess()) {
+                // REQ-14: the new language applies immediately, once the backend has stored it.
+                appLanguage.apply(result.value().language());
                 saved.postValue(new Event<>(true));
             }
         });

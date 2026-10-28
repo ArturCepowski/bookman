@@ -9,20 +9,42 @@ if (file("google-services.json").exists()) {
     apply(plugin = "com.google.gms.google-services")
 }
 
-// NFR-02: release builds talk HTTPS only. Override with -PbookmanApiUrl=https://... once hosting exists (Q-06).
-val releaseApiUrl = (findProperty("bookmanApiUrl") as String?) ?: "https://bookman.invalid/"
+// NFR-02: release builds talk HTTPS only. Production backend (Q-06, docs/deployment.md); override with
+// -PbookmanApiUrl=https://... or in ~/.gradle/gradle.properties.
+val releaseApiUrl = (findProperty("bookmanApiUrl") as String?) ?: "https://bookman-artur.duckdns.org/"
+
+// Google Play needs a higher versionCode for every upload; bump both in gradle.properties (docs/deployment.md).
+val appVersionCode = (findProperty("bookmanVersionCode") as String).toInt()
+val appVersionName = findProperty("bookmanVersionName") as String
+
+// Release signing (upload key). Keystore path and passwords live in ~/.gradle/gradle.properties, never in the
+// repository. Without them `bundleRelease` produces an unsigned bundle and Android Studio's
+// "Generate Signed App Bundle" wizard still works.
+val uploadKeystore = findProperty("bookmanKeystore") as String?
 
 android {
     namespace = "com.bookman.app"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.bookman.app"
+        // Google Play package name (fixed forever after the first upload; com.bookman.app was taken), Q-27.
+        applicationId = "com.pl.bookman.app"
         minSdk = 26
-        targetSdk = 35
-        versionCode = 1
-        versionName = "0.1.0"
+        targetSdk = 36
+        versionCode = appVersionCode
+        versionName = appVersionName
         buildConfigField("String", "API_BASE_URL", "\"$releaseApiUrl\"")
+    }
+
+    signingConfigs {
+        if (uploadKeystore != null) {
+            create("upload") {
+                storeFile = file(uploadKeystore)
+                storePassword = findProperty("bookmanKeystorePassword") as String?
+                keyAlias = (findProperty("bookmanKeyAlias") as String?) ?: "upload"
+                keyPassword = (findProperty("bookmanKeyPassword") as String?) ?: storePassword
+            }
+        }
     }
 
     buildTypes {
@@ -32,6 +54,9 @@ android {
         }
         release {
             isMinifyEnabled = false
+            if (uploadKeystore != null) {
+                signingConfig = signingConfigs.getByName("upload")
+            }
         }
     }
 

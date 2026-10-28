@@ -1,0 +1,18 @@
+# systemd unit for the Bookman backend (docs/deployment.md).
+# Install: sudo cp bookman.service /etc/systemd/system/ && sudo systemctl daemon-reload && sudo systemctl enable --now bookman
+[Unit]
+Description=Bookman backend
+After=network-online.target postgresql.service
+Wants=network-online.target
+
+[Service]
+User=bookman
+WorkingDirectory=/opt/bookman
+# Secrets (database password, JWT secret, FCM key path) – see bookman.env.example; never commit the real file.
+EnvironmentFile=/etc/bookman/bookman.env
+ExecStart=/usr/bin/java -Xmx1g -jar /opt/bookman/bookman.jar
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
