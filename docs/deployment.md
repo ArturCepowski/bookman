@@ -108,7 +108,18 @@ From the repository root on Windows (latest `main`):
 ```
 .\deploy\deploy-backend.ps1 -Key C:\Users\<you>\.ssh\bookman-oracle.key
 ```
-The script builds the jar, uploads it, restarts the service and prints its status. Migrations run on start.
+The script runs 5 steps and reports each one (`[n/5] … OK`):
+1. checks prerequisites (repository root, SSH key, `ssh`/`scp`) and shows the deployed branch and commit, with a
+   warning for uncommitted changes or a branch other than `main`,
+2. builds the jar (`gradlew bootJar`),
+3. uploads it,
+4. installs it and restarts `bookman.service`,
+5. waits (up to 120 s, `-StartupTimeoutSeconds`) until `https://bookman-artur.duckdns.org/api/users/me` answers
+   `401` – the backend is up and HTTPS works.
+
+It ends with a green `DEPLOYMENT SUCCEEDED` or a red `DEPLOYMENT FAILED: <reason>` (exit code 1); if the backend does
+not come up it prints the last 30 log lines. Migrations run on start. If Windows refuses to run scripts
+("running scripts is disabled"), run once `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned`.
 
 Useful commands on the server:
 
