@@ -256,6 +256,14 @@ from another device is applied, nor what happens after logout. Implemented:
 - a change made on another device is applied at the next login on this device (not on every app start);
 - after **logout** the app keeps the last language.
 
+### Q-27 (Google Play): Package name
+**Status:** RESOLVED – owner decision 2026-10-28
+
+`com.bookman.app` is already taken on Google Play. The app was registered in Play Console as
+**`com.pl.bookman.app`**, so that is the `applicationId` (fixed forever after the first upload). The Java packages
+and the Gradle `namespace` stay `com.bookman.app`. Firebase needs an Android app with the new package and a new
+`google-services.json`; installs with the old id are a different app (uninstall, log in again).
+
 ## External/Product decisions (not blocking implementation)
 
 These answers are assumed in the spec but require external decision:

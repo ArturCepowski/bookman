@@ -27,7 +27,8 @@ android {
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.bookman.app"
+        // Google Play package name (fixed forever after the first upload; com.bookman.app was taken), Q-27.
+        applicationId = "com.pl.bookman.app"
         minSdk = 26
         targetSdk = 36
         versionCode = appVersionCode

@@ -89,7 +89,7 @@ Notes:
 
 ### Push notifications (Firebase Cloud Messaging, Q-24)
 1. Create a project at https://console.firebase.google.com (free) and add an **Android app** with package
-   `com.bookman.app`.
+   `com.pl.bookman.app` (the `applicationId`; Java packages stay `com.bookman.app`, Q-27).
 2. Download `google-services.json` into `android/app/` (git-ignored). Without it the app still builds, just without
    notifications.
 3. Backend: Project settings → Service accounts → *Generate new private key*; store the JSON outside the repository and
