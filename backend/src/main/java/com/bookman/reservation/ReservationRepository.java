@@ -17,21 +17,24 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
     @Query("""
             select new com.bookman.reservation.ReservationView(r.id, r.checkIn, r.checkOut, r.cleaningStatus,
                 case when r.cleaningStatus in (com.bookman.reservation.CleaningStatus.TAKEN,
-                    com.bookman.reservation.CleaningStatus.DONE) then u.email end)
+                    com.bookman.reservation.CleaningStatus.DONE) then u.email end,
+                case when r.statusChangedByUserId = :userId then true else false end)
             from Reservation r left join com.bookman.user.User u on u.id = r.responsibleUserId
             where r.apartmentId = :apartmentId and r.cancelledAt is null and r.checkOut >= :today
             order by r.checkOut, r.checkIn, r.id
             """)
-    List<ReservationView> findCurrent(@Param("apartmentId") long apartmentId, @Param("today") LocalDate today);
+    List<ReservationView> findCurrent(@Param("apartmentId") long apartmentId, @Param("today") LocalDate today,
+            @Param("userId") long userId);
 
     @Query("""
             select new com.bookman.reservation.ReservationView(r.id, r.checkIn, r.checkOut, r.cleaningStatus,
                 case when r.cleaningStatus in (com.bookman.reservation.CleaningStatus.TAKEN,
-                    com.bookman.reservation.CleaningStatus.DONE) then u.email end)
+                    com.bookman.reservation.CleaningStatus.DONE) then u.email end,
+                case when r.statusChangedByUserId = :userId then true else false end)
             from Reservation r left join com.bookman.user.User u on u.id = r.responsibleUserId
             where r.id = :id
             """)
-    ReservationView findView(@Param("id") long id);
+    ReservationView findView(@Param("id") long id, @Param("userId") long userId);
 
     /** REQ-11/12: active reservations of an apartment checking out on {@code checkOut} with one of the statuses. */
     @Query("""

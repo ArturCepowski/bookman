@@ -64,6 +64,12 @@
         <action
             android:id="@+id/action_reservations_to_detail"
             app:destination="@id/apartmentDetailFragment" />
+        <action
+            android:id="@+id/action_reservations_to_members"
+            app:destination="@id/membersFragment" />
+        <action
+            android:id="@+id/action_reservations_to_reminders"
+            app:destination="@id/notificationSettingsFragment" />
     </fragment>
 
     <fragment
@@ -76,12 +82,6 @@
         <action
             android:id="@+id/action_detail_to_form"
             app:destination="@id/apartmentFormFragment" />
-        <action
-            android:id="@+id/action_detail_to_members"
-            app:destination="@id/membersFragment" />
-        <action
-            android:id="@+id/action_detail_to_reminders"
-            app:destination="@id/notificationSettingsFragment" />
     </fragment>
 
     <fragment

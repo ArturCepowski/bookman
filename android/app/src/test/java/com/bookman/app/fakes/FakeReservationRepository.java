@@ -18,7 +18,12 @@ public class FakeReservationRepository implements ReservationRepository {
     public CleaningStatus lastRequestedStatus;
 
     public static Reservation reservation(long id, CleaningStatus status, String takenBy) {
-        return new Reservation(id, LocalDate.of(2026, 10, 22), LocalDate.of(2026, 10, 25), status, takenBy);
+        return reservation(id, status, takenBy, false);
+    }
+
+    public static Reservation reservation(long id, CleaningStatus status, String takenBy, boolean changedByMe) {
+        return new Reservation(id, LocalDate.of(2026, 10, 22), LocalDate.of(2026, 10, 25), status, takenBy,
+                changedByMe);
     }
 
     @Override

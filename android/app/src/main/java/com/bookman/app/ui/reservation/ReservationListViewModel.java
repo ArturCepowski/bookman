@@ -1,5 +1,6 @@
 package com.bookman.app.ui.reservation;
 
+import androidx.annotation.Nullable;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.SavedStateHandle;
@@ -18,7 +19,10 @@ import java.util.Collections;
 import java.util.List;
 import javax.inject.Inject;
 
-/** REQ-07 reservation list of one apartment; pull to refresh imports first (REQ-06); status changes (REQ-08). */
+/**
+ * REQ-07 reservation list of one apartment; pull to refresh imports first (REQ-06); status changes (REQ-08);
+ * apartment menu: details for everyone, members/reminders/delete for the ADMIN.
+ */
 @HiltViewModel
 public class ReservationListViewModel extends ViewModel {
 
@@ -27,6 +31,7 @@ public class ReservationListViewModel extends ViewModel {
     private final long apartmentId;
     private final MutableLiveData<ReservationListState> state = new MutableLiveData<>(ReservationListState.initial());
     private final MutableLiveData<Event<AppError>> errors = new MutableLiveData<>();
+    private final MutableLiveData<Event<Boolean>> deleted = new MutableLiveData<>();
     // Callbacks arrive on a background thread; this is the latest state, independent of LiveData delivery.
     private volatile ReservationListState current = ReservationListState.initial();
 
@@ -52,6 +57,34 @@ public class ReservationListViewModel extends ViewModel {
 
     public LiveData<Event<AppError>> errors() {
         return errors;
+    }
+
+    public LiveData<Event<Boolean>> deleted() {
+        return deleted;
+    }
+
+    /**
+     * Members (REQ-10), cleaning reminders (REQ-11/12) and delete (REQ-05) are offered only to the apartment's
+     * ADMIN; the backend enforces the same rule.
+     */
+    public boolean canManage() {
+        return current.role == Role.ADMIN;
+    }
+
+    /** REQ-05: deletes the apartment with its reservations, roles and invitations. */
+    public void delete() {
+        if (!canManage()) {
+            return;
+        }
+        publish(current.withLoading(true));
+        apartments.delete(apartmentId, result -> {
+            publish(current.withLoading(false));
+            if (result.isSuccess()) {
+                deleted.postValue(new Event<>(true));
+            } else {
+                errors.postValue(new Event<>(result.error()));
+            }
+        });
     }
 
     /** Loads the caller's role and the current list (no import). */
@@ -87,6 +120,13 @@ public class ReservationListViewModel extends ViewModel {
     public List<CleaningStatus> actionsFor(Reservation reservation) {
         Role role = current.role;
         return role == null ? Collections.emptyList() : CleaningActions.targets(role, reservation.cleaningStatus);
+    }
+
+    /** Q-28: status to go back to when the cleaning service undoes its own change, or null. */
+    @Nullable
+    public CleaningStatus undoFor(Reservation reservation) {
+        Role role = current.role;
+        return role == null ? null : CleaningActions.undo(role, reservation.cleaningStatus, reservation.changedByMe);
     }
 
     public void changeStatus(long reservationId, CleaningStatus status) {

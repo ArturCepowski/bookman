@@ -1,7 +1,7 @@
 # Bookman – Implementation Plan
 
 **Project Status:** Stages 1–6 done  
-**Last updated:** 2026-10-27
+**Last updated:** 2026-10-29
 
 ---
 
@@ -116,7 +116,7 @@ Manual (owner): run backend locally, start the debug app on an emulator, registe
 | REQ-04 any user registers and becomes ADMIN; name 1–60; default time zone | `ApartmentApiTest.REQ04_registrationMakesCallerAdminWithDefaultTimeZone`, `…REQ04_nameMustHave1To60Characters`, `ApartmentFormTest.REQ04_*` |
 | REQ-04 invalid/unreachable iCal rejected with message | `ApartmentApiTest.REQ04_unreachableOrInvalidIcalIsRejected`, `HttpCalendarFeedVerifierTest.REQ04_*`, `ApartmentFormViewModelTest.REQ04_unreachableIcalIsShownOnTheIcalField` |
 | REQ-04 first import triggered immediately | `ApartmentApiTest.REQ04_registrationTriggersFirstImport` (event published); the import itself is Stage 3 |
-| REQ-05 CLEANING_SERVICE does not see edit/delete | `ApartmentDetailViewModelTest.REQ05_cleaningServiceDoesNotGetEditOrDeleteActions` |
+| REQ-05 CLEANING_SERVICE does not see edit/delete | `ApartmentDetailViewModelTest.REQ05_onlyAdminCanEdit`, `ReservationListViewModelTest.REQ05_REQ10_cleaningServiceGetsOnlyDetails` |
 | REQ-05 backend returns 403 for non-admins | `ApartmentApiTest.REQ05_cleaningServiceCannotEditOrDeleteApartment`, `…REQ05_userWithoutRoleIsForbidden` |
 | REQ-05 delete removes roles (reservations/invitations: same cascade, tables come in Stages 3–4) | `ApartmentApiTest.REQ05_deletingApartmentRemovesItsRoles` |
 | NFR-03 iCal URL only for ADMIN | `ApartmentApiTest.NFR03_icalUrlIsShownOnlyToAdmin`, `ApartmentDetailViewModelTest.NFR03_*` |
@@ -178,7 +178,7 @@ log in as another user (no access), delete it; change phone/language in the prof
 | REQ-07 row shows dates, status, who took it | `ReservationListApiTest.REQ07_rowShowsWhoTookTheCleaning`, `ReservationRepositoryImplTest.REQ07_listIsParsed`, `ReservationListViewModelTest.REQ07_*` |
 | REQ-07 visible to ADMIN and CLEANING_SERVICE | `ReservationListApiTest.REQ07_visibleToAdminAndCleaningServiceOnly` |
 | REQ-08 cleaning service NOT_PLANNED→TAKEN→DONE, responsible recorded | `CleaningStatusApiTest.REQ08_cleaningServiceTakesAndFinishesAndIsRecordedAsResponsible`, `CleaningStatusPolicyTest.REQ08_*`, `CleaningActionsTest.REQ08_*` |
-| REQ-08 cleaning service cannot revert (Q-02) | `CleaningStatusApiTest.REQ08_cleaningServiceCannotSkipOrRevert` |
+| REQ-08 cleaning service cannot skip or undo someone else's change; may undo its own (Q-28) | `CleaningStatusApiTest.REQ08_cleaningServiceCannotSkipOrUndoSomeoneElsesChange`, `…REQ08_cleaningServiceMayUndoItsOwnChange`, `CleaningStatusPolicyTest.REQ08_cleaningServiceMayUndoOnlyAStatusItSetItself`, `CleaningActionsTest.REQ08_cleaningServiceMayUndoOnlyItsOwnChange` |
 | REQ-08 admin sets any status | `CleaningStatusApiTest.REQ08_adminCanSetAnyStatusIncludingRevert` |
 | REQ-08 every change stores who and when | `CleaningStatusApiTest.REQ08_everyChangeStoresWhoAndWhen` |
 | REQ-08 no role → 403 (read and change) | `CleaningStatusApiTest.REQ08_usersWithoutRoleCannotChangeStatus`, `ReservationListApiTest.REQ07_visibleToAdminAndCleaningServiceOnly` |
@@ -360,7 +360,7 @@ For **every implemented REQ**, there is at least one automated test with the REQ
 | REQ-05 | `REQ05_adminCanEditDeleteApartment`, `REQ05_cleaningServiceCannotEdit` | Integration | backend |
 | REQ-06 | `REQ06_importReservations`, `REQ06_noDuplicates`, `REQ06_handleCancellations` | Integration | backend |
 | REQ-07 | `REQ07_reservationList` | Integration | backend |
-| REQ-08 | `REQ08_cleaningStatusTransitions`, `REQ08_cleaningServiceCannotRevert` | Integration | backend |
+| REQ-08 | `REQ08_cleaningStatusTransitions`, `REQ08_cleaningServiceMayUndoItsOwnChange` | Integration | backend |
 | REQ-09 | `REQ09_inviteCleaningService`, `REQ09_invitationExpires` | Integration | backend |
 | REQ-10 | `REQ10_manageMembersAndInvitations` | Integration | backend |
 | REQ-11 | `REQ11_notPlannedSms` | Integration | backend |
@@ -398,6 +398,13 @@ After each stage is merged:
 | 5. Notifications | ✅ Done | `claude/hopeful-brahmagupta-3cr7bc` | [#6](https://github.com/ArturCepowski/bookman/pull/6) |
 | 6. Localization | ✅ Done | `claude/hopeful-brahmagupta-3cr7bc` | [#7](https://github.com/ArturCepowski/bookman/pull/7) (together with release & deployment) |
 | Release & deployment (not a spec stage: SDK 36, Q-25; hosting, Q-06) | ✅ Done | `claude/hopeful-brahmagupta-3cr7bc` | [#7](https://github.com/ArturCepowski/bookman/pull/7) |
+
+**Owner feedback 2026-10-29 (UI only, no new requirements):** Polish UI says "apartament" instead of "mieszkanie";
+the reservation screen menu offers *Details* for everyone and *Members*, *Cleaning reminders*, *Delete* for the
+ADMIN (moved from the details screen, which keeps *Edit*) – `ReservationListViewModelTest.REQ05_*`.
+Second round: simple teal color theme; apartments, reservations and members shown as rounded tiles; cleaning
+status and role as colored labels; the cleaning service may **undo a status it set itself** (Q-28, migration
+`V9__status_changed_by.sql`, *Undo* button on the reservation tile).
 
 Production runs on an Oracle Always Free VM (`docs/deployment.md`); releases go to the Google Play internal
 testing track. Before every Play upload raise `bookmanVersionCode` in `android/gradle.properties`.

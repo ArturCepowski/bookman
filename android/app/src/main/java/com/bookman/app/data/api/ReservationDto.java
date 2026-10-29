@@ -7,4 +7,5 @@ public class ReservationDto {
     public String checkOut;
     public String cleaningStatus;
     public String takenBy;
+    public boolean changedByMe;
 }

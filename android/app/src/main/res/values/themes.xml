@@ -1,4 +1,46 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.Bookman" parent="Theme.Material3.DayNight.NoActionBar" />
+    <style name="Theme.Bookman" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/brand_primary</item>
+        <item name="colorOnPrimary">@color/brand_on_primary</item>
+        <item name="colorPrimaryContainer">@color/brand_primary_container</item>
+        <item name="colorOnPrimaryContainer">@color/brand_on_primary_container</item>
+        <item name="colorSecondary">@color/brand_secondary</item>
+        <item name="colorOnSecondary">@color/brand_on_secondary</item>
+        <item name="colorSecondaryContainer">@color/brand_secondary_container</item>
+        <item name="colorOnSecondaryContainer">@color/brand_on_secondary_container</item>
+        <item name="colorTertiary">@color/brand_tertiary</item>
+        <item name="colorTertiaryContainer">@color/brand_tertiary_container</item>
+        <item name="colorOnTertiaryContainer">@color/brand_on_tertiary_container</item>
+        <item name="android:colorBackground">@color/brand_background</item>
+        <item name="colorSurface">@color/brand_background</item>
+        <item name="colorOnSurface">@color/brand_on_surface</item>
+        <item name="colorOnSurfaceVariant">@color/brand_on_surface_variant</item>
+        <item name="colorSurfaceContainerLow">@color/brand_surface_container_low</item>
+        <item name="colorSurfaceContainer">@color/brand_surface_container</item>
+        <item name="colorSurfaceContainerHigh">@color/brand_surface_container_high</item>
+        <item name="colorSurfaceContainerHighest">@color/brand_surface_container_highest</item>
+        <item name="colorOutline">@color/brand_outline</item>
+        <item name="colorOutlineVariant">@color/brand_outline_variant</item>
+    </style>
+
+    <!-- Rounded tile for list items (apartments, reservations, members), same corner as the FAB. -->
+    <style name="Widget.Bookman.Tile" parent="Widget.Material3.CardView.Filled">
+        <item name="cardCornerRadius">16dp</item>
+        <item name="cardBackgroundColor">?attr/colorSurfaceContainerHigh</item>
+        <item name="android:layout_marginStart">12dp</item>
+        <item name="android:layout_marginEnd">12dp</item>
+        <item name="android:layout_marginTop">6dp</item>
+        <item name="android:layout_marginBottom">6dp</item>
+    </style>
+
+    <!-- Small colored label (cleaning status, role); colors set in code via backgroundTint/textColor. -->
+    <style name="Widget.Bookman.Pill" parent="">
+        <item name="android:background">@drawable/bg_pill</item>
+        <item name="android:paddingStart">10dp</item>
+        <item name="android:paddingEnd">10dp</item>
+        <item name="android:paddingTop">3dp</item>
+        <item name="android:paddingBottom">3dp</item>
+        <item name="android:textAppearance">?attr/textAppearanceLabelLarge</item>
+    </style>
 </resources>

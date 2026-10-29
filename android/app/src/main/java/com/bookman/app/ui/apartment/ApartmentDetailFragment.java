@@ -18,7 +18,6 @@ import com.bookman.app.R;
 import com.bookman.app.databinding.FragmentApartmentDetailBinding;
 import com.bookman.app.ui.common.RoleLabels;
 import com.bookman.app.ui.common.UiErrors;
-import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import dagger.hilt.android.AndroidEntryPoint;
 
 @AndroidEntryPoint
@@ -52,12 +51,6 @@ public class ApartmentDetailFragment extends Fragment {
         viewModel.loading().observe(getViewLifecycleOwner(), loading ->
                 binding.progress.setVisibility(Boolean.TRUE.equals(loading) ? View.VISIBLE : View.GONE));
         viewModel.errors().observe(getViewLifecycleOwner(), e -> UiErrors.show(this, e.consume()));
-        viewModel.deleted().observe(getViewLifecycleOwner(), event -> {
-            if (event.consume() != null) {
-                // The reservation screen below belongs to the deleted apartment, so go back to the list.
-                NavHostFragment.findNavController(this).popBackStack(R.id.apartmentListFragment, false);
-            }
-        });
 
         requireActivity().addMenuProvider(new MenuProvider() {
             @Override
@@ -67,11 +60,8 @@ public class ApartmentDetailFragment extends Fragment {
 
             @Override
             public void onPrepareMenu(@NonNull Menu menu) {
-                boolean admin = viewModel.canManage();
-                menu.findItem(R.id.menu_edit).setVisible(admin);
-                menu.findItem(R.id.menu_delete).setVisible(admin);
-                menu.findItem(R.id.menu_members).setVisible(admin);
-                menu.findItem(R.id.menu_reminders).setVisible(admin);
+                // Members, reminders and delete are in the menu of the reservation screen.
+                menu.findItem(R.id.menu_edit).setVisible(viewModel.canManage());
             }
 
             @Override
@@ -83,24 +73,6 @@ public class ApartmentDetailFragment extends Fragment {
                             .navigate(R.id.action_detail_to_form, args);
                     return true;
                 }
-                if (item.getItemId() == R.id.menu_members) {
-                    Bundle args = new Bundle();
-                    args.putLong(ApartmentFormViewModel.ARG_APARTMENT_ID, viewModel.apartmentId());
-                    NavHostFragment.findNavController(ApartmentDetailFragment.this)
-                            .navigate(R.id.action_detail_to_members, args);
-                    return true;
-                }
-                if (item.getItemId() == R.id.menu_reminders) {
-                    Bundle args = new Bundle();
-                    args.putLong(ApartmentFormViewModel.ARG_APARTMENT_ID, viewModel.apartmentId());
-                    NavHostFragment.findNavController(ApartmentDetailFragment.this)
-                            .navigate(R.id.action_detail_to_reminders, args);
-                    return true;
-                }
-                if (item.getItemId() == R.id.menu_delete) {
-                    confirmDelete();
-                    return true;
-                }
                 return false;
             }
         }, getViewLifecycleOwner(), Lifecycle.State.RESUMED);
@@ -110,15 +82,6 @@ public class ApartmentDetailFragment extends Fragment {
     public void onResume() {
         super.onResume();
         viewModel.refresh();
-    }
-
-    private void confirmDelete() {
-        new MaterialAlertDialogBuilder(requireContext())
-                .setTitle(R.string.delete_apartment_title)
-                .setMessage(R.string.delete_apartment_message)
-                .setNegativeButton(R.string.action_cancel, null)
-                .setPositiveButton(R.string.action_delete, (dialog, which) -> viewModel.delete())
-                .show();
     }
 
     @Override
