@@ -7,7 +7,7 @@
 
 - `CLEANING_SERVICE` users can only change: `NOT_PLANNED → TAKEN → DONE` (one direction only)
 - `ADMIN` users can set any status and can revert changes
-- `CLEANING_SERVICE` cannot revert `DONE` or `TAKEN`
+- `CLEANING_SERVICE` cannot revert `DONE` or `TAKEN` – **superseded by Q-28**: it may undo a status it set itself
 - Every status change is logged with user identity and timestamp
 
 ### Q-03 (REQ-11/12): Reminder timing – ANSWERED
@@ -263,6 +263,22 @@ from another device is applied, nor what happens after logout. Implemented:
 **`com.pl.bookman.app`**, so that is the `applicationId` (fixed forever after the first upload). The Java packages
 and the Gradle `namespace` stay `com.bookman.app`. Firebase needs an Android app with the new package and a new
 `google-services.json`; installs with the old id are a different app (uninstall, log in again).
+
+### Q-28 (REQ-08): Cleaning service may undo its own status change
+**Status:** RESOLVED – owner decision 2026-10-29 · **proposed spec change**
+
+The owner wants the cleaning service to be able to set back statuses it changed itself (e.g. tapped "take" or
+"cleaned" by mistake). Implemented:
+- a `CLEANING_SERVICE` user may go one step back – `TAKEN → NOT_PLANNED` and `DONE → TAKEN` – only if **they set
+  the current status** (the reservation stores who set it, migration `V9__status_changed_by.sql`, backfilled from
+  the status history);
+- they still cannot undo a colleague's or the admin's change, skip steps, or touch `PRIVATE` (Q-20);
+- undoing `DONE` keeps the person who took the cleaning as responsible (Q-21: a colleague may finish it and undo
+  that again);
+- the API returns `changedByMe` per reservation; the app shows an *Undo* button on such reservations;
+- the change is recorded in the status history like any other (REQ-08).
+Proposed spec change, REQ-08 acceptance criteria: "a `CLEANING_SERVICE` user can change `NOT_PLANNED → TAKEN` and
+`TAKEN → DONE`, and can undo a change they made themselves (`TAKEN → NOT_PLANNED`, `DONE → TAKEN`)".
 
 ## External/Product decisions (not blocking implementation)
 

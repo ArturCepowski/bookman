@@ -39,6 +39,10 @@ public class Reservation {
     @Column(name = "responsible_user_id")
     private Long responsibleUserId;
 
+    /** Q-28: who set the current cleaning status (NULL for the initial NOT_PLANNED). */
+    @Column(name = "status_changed_by_user_id")
+    private Long statusChangedByUserId;
+
     @Column(name = "cancelled_at")
     private Instant cancelledAt;
 
@@ -78,13 +82,17 @@ public class Reservation {
     }
 
     // Q-21: whoever sets TAKEN (admin included) is responsible; DONE keeps it; NOT_PLANNED/PRIVATE clear it.
+    // Q-28: undoing DONE (back to TAKEN) keeps the person who took the cleaning.
     void changeCleaningStatus(CleaningStatus newStatus, long actorId) {
-        if (newStatus == CleaningStatus.TAKEN) {
+        boolean undoDone = cleaningStatus == CleaningStatus.DONE && newStatus == CleaningStatus.TAKEN
+                && responsibleUserId != null;
+        if (newStatus == CleaningStatus.TAKEN && !undoDone) {
             responsibleUserId = actorId;
         } else if (newStatus == CleaningStatus.NOT_PLANNED || newStatus == CleaningStatus.PRIVATE) {
             responsibleUserId = null;
         }
         cleaningStatus = newStatus;
+        statusChangedByUserId = actorId;
     }
 
     public Long getId() {
@@ -113,6 +121,10 @@ public class Reservation {
 
     public Long getResponsibleUserId() {
         return responsibleUserId;
+    }
+
+    public Long getStatusChangedByUserId() {
+        return statusChangedByUserId;
     }
 
     public boolean isCancelled() {

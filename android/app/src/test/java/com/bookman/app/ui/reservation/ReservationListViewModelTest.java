@@ -168,4 +168,18 @@ public class ReservationListViewModelTest {
         assertEquals(AppError.FORBIDDEN, vm.errors().getValue().consume());
         assertNull(vm.deleted().getValue());
     }
+
+    @Test
+    public void REQ08_cleaningServiceCanUndoItsOwnChangeFromTheList() {
+        apartments.detailsResult = Result.success(FakeApartmentRepository.details(Role.CLEANING_SERVICE));
+        reservations.listResult = Result.success(Arrays.asList(
+                reservation(1, CleaningStatus.DONE, "cleaner@example.com", true),
+                reservation(2, CleaningStatus.DONE, "other@example.com", false)));
+        ReservationListViewModel vm = viewModel();
+        vm.load();
+
+        ReservationListState state = vm.state().getValue();
+        assertEquals(CleaningStatus.TAKEN, vm.undoFor(state.items.get(0)));
+        assertNull(vm.undoFor(state.items.get(1)));
+    }
 }

@@ -73,6 +73,7 @@
     <string name="action_mark_cleaned">Oznacz jako posprzątane</string>
     <string name="action_mark_not_planned">Oznacz jako niezaplanowane</string>
     <string name="action_change_status">Zmień status</string>
+    <string name="action_undo">Cofnij</string>
     <string name="error_import_failed">Nie udało się odświeżyć rezerwacji z Booking.com. Pokazuję ostatnią znaną listę.</string>
     <string name="error_status_conflict">Ktoś inny zmienił w międzyczasie to sprzątanie. Lista została odświeżona.</string>
     <string name="status_private">Prywatne (zablokowane przez właściciela)</string>

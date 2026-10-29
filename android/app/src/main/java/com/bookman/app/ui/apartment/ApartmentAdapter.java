@@ -9,7 +9,7 @@ import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 import com.bookman.app.data.apartment.ApartmentSummary;
 import com.bookman.app.databinding.ItemApartmentBinding;
-import com.bookman.app.ui.common.RoleLabels;
+import com.bookman.app.ui.common.Pills;
 
 class ApartmentAdapter extends ListAdapter<ApartmentSummary, ApartmentAdapter.Holder> {
 
@@ -40,7 +40,7 @@ class ApartmentAdapter extends ListAdapter<ApartmentSummary, ApartmentAdapter.Ho
     public void onBindViewHolder(@NonNull Holder holder, int position) {
         ApartmentSummary item = getItem(position);
         holder.binding.name.setText(item.name);
-        holder.binding.role.setText(RoleLabels.of(item.role));
+        Pills.role(holder.binding.role, item.role);
         holder.binding.getRoot().setOnClickListener(v -> onClick.accept(item));
     }
 

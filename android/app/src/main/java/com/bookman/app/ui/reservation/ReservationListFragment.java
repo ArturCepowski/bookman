@@ -46,7 +46,8 @@ public class ReservationListFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         shownRole = null;
         viewModel = new ViewModelProvider(this).get(ReservationListViewModel.class);
-        ReservationAdapter adapter = new ReservationAdapter(viewModel::actionsFor, this::onAction);
+        ReservationAdapter adapter = new ReservationAdapter(viewModel::actionsFor, this::onAction,
+                viewModel::undoFor, (reservation, target) -> viewModel.changeStatus(reservation.id, target));
         binding.list.setAdapter(adapter);
         binding.swipeRefresh.setOnRefreshListener(viewModel::refresh);
 

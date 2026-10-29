@@ -11,6 +11,7 @@ import com.bookman.app.R;
 import com.bookman.app.data.reservation.CleaningStatus;
 import com.bookman.app.data.reservation.Reservation;
 import com.bookman.app.databinding.ItemReservationBinding;
+import com.bookman.app.ui.common.Pills;
 import com.bookman.app.ui.common.StatusLabels;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
@@ -23,12 +24,19 @@ class ReservationAdapter extends ListAdapter<Reservation, ReservationAdapter.Hol
         void onAction(Reservation reservation, List<CleaningStatus> targets);
     }
 
+    interface OnUndo {
+        void onUndo(Reservation reservation, CleaningStatus target);
+    }
+
     private static final DateTimeFormatter DATE = DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM);
 
     private final Function<Reservation, List<CleaningStatus>> actions;
     private final OnAction onAction;
+    private final Function<Reservation, CleaningStatus> undo;
+    private final OnUndo onUndo;
 
-    ReservationAdapter(Function<Reservation, List<CleaningStatus>> actions, OnAction onAction) {
+    ReservationAdapter(Function<Reservation, List<CleaningStatus>> actions, OnAction onAction,
+            Function<Reservation, CleaningStatus> undo, OnUndo onUndo) {
         super(new DiffUtil.ItemCallback<>() {
             @Override
             public boolean areItemsTheSame(@NonNull Reservation a, @NonNull Reservation b) {
@@ -42,6 +50,8 @@ class ReservationAdapter extends ListAdapter<Reservation, ReservationAdapter.Hol
         });
         this.actions = actions;
         this.onAction = onAction;
+        this.undo = undo;
+        this.onUndo = onUndo;
     }
 
     @NonNull
@@ -56,7 +66,7 @@ class ReservationAdapter extends ListAdapter<Reservation, ReservationAdapter.Hol
         ItemReservationBinding b = holder.binding;
         b.dates.setText(b.getRoot().getContext().getString(R.string.reservation_dates,
                 DATE.format(item.checkIn), DATE.format(item.checkOut)));
-        b.status.setText(StatusLabels.of(item.cleaningStatus));
+        Pills.status(b.status, item.cleaningStatus);
         b.takenBy.setVisibility(item.takenBy == null ? View.GONE : View.VISIBLE);
         if (item.takenBy != null) {
             b.takenBy.setText(b.getRoot().getContext().getString(R.string.reservation_taken_by, item.takenBy));
@@ -70,6 +80,9 @@ class ReservationAdapter extends ListAdapter<Reservation, ReservationAdapter.Hol
                     : R.string.action_change_status);
             b.action.setOnClickListener(v -> onAction.onAction(item, targets));
         }
+        CleaningStatus back = undo.apply(item);
+        b.undo.setVisibility(back == null ? View.GONE : View.VISIBLE);
+        b.undo.setOnClickListener(back == null ? null : v -> onUndo.onUndo(item, back));
     }
 
     static final class Holder extends RecyclerView.ViewHolder {

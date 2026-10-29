@@ -60,6 +60,6 @@ public class ReservationRepositoryImpl implements ReservationRepository {
 
     private static Reservation toReservation(ReservationDto dto) {
         return new Reservation(dto.id, LocalDate.parse(dto.checkIn), LocalDate.parse(dto.checkOut),
-                CleaningStatus.valueOf(dto.cleaningStatus), dto.takenBy);
+                CleaningStatus.valueOf(dto.cleaningStatus), dto.takenBy, dto.changedByMe);
     }
 }

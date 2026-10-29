@@ -1,5 +1,6 @@
 package com.bookman.app.ui.reservation;
 
+import androidx.annotation.Nullable;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.SavedStateHandle;
@@ -119,6 +120,13 @@ public class ReservationListViewModel extends ViewModel {
     public List<CleaningStatus> actionsFor(Reservation reservation) {
         Role role = current.role;
         return role == null ? Collections.emptyList() : CleaningActions.targets(role, reservation.cleaningStatus);
+    }
+
+    /** Q-28: status to go back to when the cleaning service undoes its own change, or null. */
+    @Nullable
+    public CleaningStatus undoFor(Reservation reservation) {
+        Role role = current.role;
+        return role == null ? null : CleaningActions.undo(role, reservation.cleaningStatus, reservation.changedByMe);
     }
 
     public void changeStatus(long reservationId, CleaningStatus status) {

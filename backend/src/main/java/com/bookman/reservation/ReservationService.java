@@ -39,7 +39,7 @@ public class ReservationService {
     public List<ReservationView> listCurrent(long apartmentId, long userId) {
         access.requireMember(apartmentId, userId);
         ZoneId zone = ZoneId.of(apartments.getReferenceById(apartmentId).getTimeZone());
-        return reservations.findCurrent(apartmentId, LocalDate.now(clock.withZone(zone)));
+        return reservations.findCurrent(apartmentId, LocalDate.now(clock.withZone(zone)), userId);
     }
 
     /** REQ-06: manual import (pull to refresh) by any member of the apartment. */
@@ -62,11 +62,12 @@ public class ReservationService {
                 .filter(r -> !r.isCancelled())
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, ErrorCode.NOT_FOUND, "No such reservation"));
         CleaningStatus current = reservation.getCleaningStatus();
-        CleaningStatusPolicy.check(role, current, requested);
+        boolean setByActor = Long.valueOf(userId).equals(reservation.getStatusChangedByUserId());
+        CleaningStatusPolicy.check(role, current, requested, setByActor);
 
         reservation.changeCleaningStatus(requested, userId);
         reservations.saveAndFlush(reservation);
         history.save(new ReservationStatusChange(reservationId, current, requested, userId, clock.instant()));
-        return reservations.findView(reservationId);
+        return reservations.findView(reservationId, userId);
     }
 }

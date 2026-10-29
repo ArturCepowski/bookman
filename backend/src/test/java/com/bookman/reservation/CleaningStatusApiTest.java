@@ -60,13 +60,43 @@ class CleaningStatusApiTest extends IntegrationTest {
     }
 
     @Test
-    void REQ08_cleaningServiceCannotSkipOrRevert() throws Exception {
+    void REQ08_cleaningServiceCannotSkipOrUndoSomeoneElsesChange() throws Exception {
+        TestUser secondCleaner = registerUser("second@example.com");
+        addCleaningService(apartment, secondCleaner);
+
         change(cleaner, "DONE").andExpect(status().isForbidden());
         change(cleaner, "TAKEN").andExpect(status().isOk());
-        change(cleaner, "NOT_PLANNED").andExpect(status().isForbidden());
-        change(cleaner, "DONE").andExpect(status().isOk());
+        change(secondCleaner, "NOT_PLANNED").andExpect(status().isForbidden());
+        change(secondCleaner, "DONE").andExpect(status().isOk());
         change(cleaner, "TAKEN").andExpect(status().isForbidden());
         change(cleaner, "NOT_PLANNED").andExpect(status().isForbidden());
+        change(admin, "TAKEN").andExpect(status().isOk());
+        change(cleaner, "NOT_PLANNED").andExpect(status().isForbidden());
+    }
+
+    @Test
+    void REQ08_cleaningServiceMayUndoItsOwnChange() throws Exception {
+        TestUser secondCleaner = registerUser("second@example.com");
+        addCleaningService(apartment, secondCleaner);
+
+        change(cleaner, "TAKEN").andExpect(status().isOk()).andExpect(jsonPath("$.changedByMe").value(true));
+        change(cleaner, "NOT_PLANNED").andExpect(status().isOk()).andExpect(jsonPath("$.takenBy").doesNotExist());
+
+        change(cleaner, "TAKEN").andExpect(status().isOk());
+        change(secondCleaner, "DONE").andExpect(status().isOk());
+        // Q-21 + Q-28: the colleague who finished it may undo DONE; the one who took it stays responsible.
+        change(secondCleaner, "TAKEN")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.takenBy").value("cleaner@example.com"));
+        assertThat(reservations.findById(reservation).orElseThrow().getResponsibleUserId()).isEqualTo(cleaner.id());
+    }
+
+    @Test
+    void REQ08_listTellsEachUserWhetherTheyMadeTheCurrentChange() throws Exception {
+        change(cleaner, "TAKEN").andExpect(status().isOk());
+
+        call(cleaner, get(listUrl(apartment)), null).andExpect(jsonPath("$[0].changedByMe").value(true));
+        call(admin, get(listUrl(apartment)), null).andExpect(jsonPath("$[0].changedByMe").value(false));
     }
 
     @Test
