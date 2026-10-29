@@ -19,7 +19,6 @@ public class ApartmentDetailViewModel extends ViewModel {
     private final MutableLiveData<ApartmentDetails> details = new MutableLiveData<>();
     private final MutableLiveData<Boolean> loading = new MutableLiveData<>(false);
     private final MutableLiveData<Event<AppError>> errors = new MutableLiveData<>();
-    private final MutableLiveData<Event<Boolean>> deleted = new MutableLiveData<>();
 
     @Inject
     public ApartmentDetailViewModel(SavedStateHandle args, ApartmentRepository repository) {
@@ -47,11 +46,7 @@ public class ApartmentDetailViewModel extends ViewModel {
         return errors;
     }
 
-    public LiveData<Event<Boolean>> deleted() {
-        return deleted;
-    }
-
-    /** REQ-05: edit/delete actions are offered only to the apartment's ADMIN. */
+    /** REQ-05: editing is offered only to the apartment's ADMIN (delete is on the reservation screen). */
     public boolean canManage() {
         ApartmentDetails current = details.getValue();
         return current != null && current.canManage();
@@ -63,21 +58,6 @@ public class ApartmentDetailViewModel extends ViewModel {
             loading.postValue(false);
             if (result.isSuccess()) {
                 details.postValue(result.value());
-            } else {
-                errors.postValue(new Event<>(result.error()));
-            }
-        });
-    }
-
-    public void delete() {
-        if (!canManage()) {
-            return;
-        }
-        loading.setValue(true);
-        repository.delete(apartmentId, result -> {
-            loading.postValue(false);
-            if (result.isSuccess()) {
-                deleted.postValue(new Event<>(true));
             } else {
                 errors.postValue(new Event<>(result.error()));
             }

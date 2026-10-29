@@ -25,12 +25,12 @@
     <string name="error_invalid_credentials">Nieprawidłowy e-mail lub hasło</string>
     <string name="error_session_expired">Sesja wygasła. Zaloguj się ponownie.</string>
     <string name="error_unknown">Coś poszło nie tak. Spróbuj ponownie.</string>
-    <string name="title_apartments">Moje mieszkania</string>
-    <string name="title_apartment">Mieszkanie</string>
-    <string name="title_apartment_form">Dane mieszkania</string>
+    <string name="title_apartments">Moje apartamenty</string>
+    <string name="title_apartment">Apartament</string>
+    <string name="title_apartment_form">Dane apartamentu</string>
     <string name="title_profile">Profil</string>
 
-    <string name="label_apartment_name">Nazwa mieszkania</string>
+    <string name="label_apartment_name">Nazwa apartamentu</string>
     <string name="label_booking_url">Link do oferty na Booking.com</string>
     <string name="label_ical_url">Link eksportu kalendarza (iCal) z Booking.com</string>
     <string name="label_time_zone">Strefa czasowa</string>
@@ -41,15 +41,16 @@
     <string name="role_admin">Administrator</string>
     <string name="role_cleaning_service">Serwis sprzątający</string>
 
-    <string name="apartments_empty">Nie masz jeszcze żadnych mieszkań. Zarejestruj pierwsze mieszkanie przyciskiem poniżej.</string>
+    <string name="apartments_empty">Nie masz jeszcze żadnych apartamentów. Zarejestruj pierwszy apartament przyciskiem poniżej.</string>
 
-    <string name="action_register_apartment">Zarejestruj mieszkanie</string>
+    <string name="action_register_apartment">Zarejestruj apartament</string>
     <string name="action_save">Zapisz</string>
     <string name="action_edit">Edytuj</string>
+    <string name="action_details">Szczegóły</string>
     <string name="action_delete">Usuń</string>
     <string name="action_cancel">Anuluj</string>
 
-    <string name="delete_apartment_title">Usunąć mieszkanie?</string>
+    <string name="delete_apartment_title">Usunąć apartament?</string>
     <string name="delete_apartment_message">Zostaną usunięte jego rezerwacje, role i zaproszenia. Tej operacji nie można cofnąć.</string>
     <string name="profile_saved">Profil zapisany</string>
 
@@ -90,7 +91,7 @@
     <string name="action_cancel_invitation">Anuluj</string>
     <string name="action_remove_member">Usuń</string>
     <string name="remove_member_title">Usunąć %1$s?</string>
-    <string name="remove_member_message">Ta osoba straci dostęp do mieszkania i jego rezerwacji.</string>
+    <string name="remove_member_message">Ta osoba straci dostęp do apartamentu i jego rezerwacji.</string>
     <string name="invitations_empty">Brak oczekujących zaproszeń.</string>
     <string name="action_accept">Akceptuj</string>
     <string name="action_decline">Odrzuć</string>
@@ -101,12 +102,12 @@
         <item quantity="many">Masz %d oczekujących zaproszeń. Dotknij, aby je zobaczyć.</item>
         <item quantity="other">Masz %d oczekującego zaproszenia. Dotknij, aby je zobaczyć.</item>
     </plurals>
-    <string name="error_already_member">Ta osoba ma już dostęp do mieszkania</string>
+    <string name="error_already_member">Ta osoba ma już dostęp do apartamentu</string>
     <string name="error_invitation_pending">Ten adres e-mail został już zaproszony</string>
     <string name="error_invitation_expired">To zaproszenie wygasło. Poproś właściciela o ponowne zaproszenie.</string>
-    <string name="error_cannot_remove_admin">Nie można usunąć administratora mieszkania</string>
+    <string name="error_cannot_remove_admin">Nie można usunąć administratora apartamentu</string>
     <string name="title_reminders">Przypomnienia o sprzątaniu</string>
-    <string name="reminders_intro">Powiadomienia trafiają na telefony administratora i całego serwisu sprzątającego (zalogowanych w Bookmanie, z włączonymi powiadomieniami) o wybranej godzinie, w strefie czasowej mieszkania.</string>
+    <string name="reminders_intro">Powiadomienia trafiają na telefony administratora i całego serwisu sprzątającego (zalogowanych w Bookmanie, z włączonymi powiadomieniami) o wybranej godzinie, w strefie czasowej apartamentu.</string>
     <string name="reminder_not_planned_title">Sprzątanie niezaplanowane</string>
     <string name="reminder_not_planned_description">Przypomina o jutrzejszych wyjazdach, których sprzątania nikt jeszcze nie wziął.</string>
     <string name="reminder_not_done_title">Sprzątanie niewykonane</string>

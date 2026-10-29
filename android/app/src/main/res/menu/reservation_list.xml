@@ -1,8 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Apartment menu on its reservation screen; members, reminders and delete are ADMIN only (shown in code). -->
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
         android:id="@+id/menu_apartment_details"
-        android:title="@string/title_apartment"
+        android:title="@string/action_details"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/menu_members"
+        android:title="@string/title_members"
+        android:visible="false"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/menu_reminders"
+        android:title="@string/title_reminders"
+        android:visible="false"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/menu_delete"
+        android:title="@string/action_delete"
+        android:visible="false"
         app:showAsAction="never" />
 </menu>

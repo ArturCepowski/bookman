@@ -65,8 +65,17 @@ public class ReservationListFragment extends Fragment {
             if (bar != null && state.apartmentName != null) {
                 bar.setTitle(state.apartmentName);
             }
+            if (roleChanged) {
+                // Admin-only menu entries depend on the role.
+                requireActivity().invalidateMenu();
+            }
         });
         viewModel.errors().observe(getViewLifecycleOwner(), e -> UiErrors.show(this, e.consume()));
+        viewModel.deleted().observe(getViewLifecycleOwner(), event -> {
+            if (event.consume() != null) {
+                NavHostFragment.findNavController(this).popBackStack(R.id.apartmentListFragment, false);
+            }
+        });
 
         requireActivity().addMenuProvider(new MenuProvider() {
             @Override
@@ -75,12 +84,30 @@ public class ReservationListFragment extends Fragment {
             }
 
             @Override
+            public void onPrepareMenu(@NonNull Menu menu) {
+                boolean admin = viewModel.canManage();
+                menu.findItem(R.id.menu_members).setVisible(admin);
+                menu.findItem(R.id.menu_reminders).setVisible(admin);
+                menu.findItem(R.id.menu_delete).setVisible(admin);
+            }
+
+            @Override
             public boolean onMenuItemSelected(@NonNull MenuItem item) {
-                if (item.getItemId() == R.id.menu_apartment_details) {
-                    Bundle args = new Bundle();
-                    args.putLong(ApartmentFormViewModel.ARG_APARTMENT_ID, viewModel.apartmentId());
-                    NavHostFragment.findNavController(ReservationListFragment.this)
-                            .navigate(R.id.action_reservations_to_detail, args);
+                int id = item.getItemId();
+                if (id == R.id.menu_apartment_details) {
+                    navigate(R.id.action_reservations_to_detail);
+                    return true;
+                }
+                if (id == R.id.menu_members) {
+                    navigate(R.id.action_reservations_to_members);
+                    return true;
+                }
+                if (id == R.id.menu_reminders) {
+                    navigate(R.id.action_reservations_to_reminders);
+                    return true;
+                }
+                if (id == R.id.menu_delete) {
+                    confirmDelete();
                     return true;
                 }
                 return false;
@@ -92,6 +119,21 @@ public class ReservationListFragment extends Fragment {
     public void onResume() {
         super.onResume();
         viewModel.load();
+    }
+
+    private void navigate(int action) {
+        Bundle args = new Bundle();
+        args.putLong(ApartmentFormViewModel.ARG_APARTMENT_ID, viewModel.apartmentId());
+        NavHostFragment.findNavController(this).navigate(action, args);
+    }
+
+    private void confirmDelete() {
+        new MaterialAlertDialogBuilder(requireContext())
+                .setTitle(R.string.delete_apartment_title)
+                .setMessage(R.string.delete_apartment_message)
+                .setNegativeButton(R.string.action_cancel, null)
+                .setPositiveButton(R.string.action_delete, (dialog, which) -> viewModel.delete())
+                .show();
     }
 
     private void onAction(Reservation reservation, List<CleaningStatus> targets) {

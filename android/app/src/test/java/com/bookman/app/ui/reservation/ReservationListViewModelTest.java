@@ -3,6 +3,8 @@ package com.bookman.app.ui.reservation;
 import static com.bookman.app.fakes.FakeReservationRepository.reservation;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule;
@@ -119,5 +121,51 @@ public class ReservationListViewModelTest {
         ReservationListViewModel vm = viewModel();
 
         assertTrue(vm.actionsFor(reservation(1, CleaningStatus.NOT_PLANNED, null)).isEmpty());
+    }
+
+    @Test
+    public void REQ05_REQ10_adminGetsMembersRemindersAndDeleteInTheApartmentMenu() {
+        ReservationListViewModel vm = viewModel();
+        assertFalse(vm.canManage());
+
+        vm.load();
+
+        assertTrue(vm.canManage());
+    }
+
+    @Test
+    public void REQ05_REQ10_cleaningServiceGetsOnlyDetails() {
+        apartments.detailsResult = Result.success(FakeApartmentRepository.details(Role.CLEANING_SERVICE));
+        ReservationListViewModel vm = viewModel();
+        vm.load();
+
+        assertFalse(vm.canManage());
+        vm.delete();
+
+        assertNull(apartments.lastDeletedId);
+    }
+
+    @Test
+    public void REQ05_adminDeletesTheApartmentFromTheReservationScreen() {
+        ReservationListViewModel vm = viewModel();
+        vm.load();
+
+        vm.delete();
+
+        assertEquals(Long.valueOf(5), apartments.lastDeletedId);
+        assertNotNull(vm.deleted().getValue().consume());
+        assertFalse(vm.state().getValue().loading);
+    }
+
+    @Test
+    public void REQ05_backendRejectionOfDeleteIsShown() {
+        ReservationListViewModel vm = viewModel();
+        vm.load();
+        apartments.deleteResult = Result.failure(AppError.FORBIDDEN);
+
+        vm.delete();
+
+        assertEquals(AppError.FORBIDDEN, vm.errors().getValue().consume());
+        assertNull(vm.deleted().getValue());
     }
 }

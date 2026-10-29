@@ -50,6 +50,7 @@
     <string name="action_register_apartment">Register apartment</string>
     <string name="action_save">Save</string>
     <string name="action_edit">Edit</string>
+    <string name="action_details">Details</string>
     <string name="action_delete">Delete</string>
     <string name="action_cancel">Cancel</string>
 

@@ -1,7 +1,7 @@
 # Bookman – Implementation Plan
 
 **Project Status:** Stages 1–6 done  
-**Last updated:** 2026-10-27
+**Last updated:** 2026-10-29
 
 ---
 
@@ -116,7 +116,7 @@ Manual (owner): run backend locally, start the debug app on an emulator, registe
 | REQ-04 any user registers and becomes ADMIN; name 1–60; default time zone | `ApartmentApiTest.REQ04_registrationMakesCallerAdminWithDefaultTimeZone`, `…REQ04_nameMustHave1To60Characters`, `ApartmentFormTest.REQ04_*` |
 | REQ-04 invalid/unreachable iCal rejected with message | `ApartmentApiTest.REQ04_unreachableOrInvalidIcalIsRejected`, `HttpCalendarFeedVerifierTest.REQ04_*`, `ApartmentFormViewModelTest.REQ04_unreachableIcalIsShownOnTheIcalField` |
 | REQ-04 first import triggered immediately | `ApartmentApiTest.REQ04_registrationTriggersFirstImport` (event published); the import itself is Stage 3 |
-| REQ-05 CLEANING_SERVICE does not see edit/delete | `ApartmentDetailViewModelTest.REQ05_cleaningServiceDoesNotGetEditOrDeleteActions` |
+| REQ-05 CLEANING_SERVICE does not see edit/delete | `ApartmentDetailViewModelTest.REQ05_onlyAdminCanEdit`, `ReservationListViewModelTest.REQ05_REQ10_cleaningServiceGetsOnlyDetails` |
 | REQ-05 backend returns 403 for non-admins | `ApartmentApiTest.REQ05_cleaningServiceCannotEditOrDeleteApartment`, `…REQ05_userWithoutRoleIsForbidden` |
 | REQ-05 delete removes roles (reservations/invitations: same cascade, tables come in Stages 3–4) | `ApartmentApiTest.REQ05_deletingApartmentRemovesItsRoles` |
 | NFR-03 iCal URL only for ADMIN | `ApartmentApiTest.NFR03_icalUrlIsShownOnlyToAdmin`, `ApartmentDetailViewModelTest.NFR03_*` |
@@ -398,6 +398,10 @@ After each stage is merged:
 | 5. Notifications | ✅ Done | `claude/hopeful-brahmagupta-3cr7bc` | [#6](https://github.com/ArturCepowski/bookman/pull/6) |
 | 6. Localization | ✅ Done | `claude/hopeful-brahmagupta-3cr7bc` | [#7](https://github.com/ArturCepowski/bookman/pull/7) (together with release & deployment) |
 | Release & deployment (not a spec stage: SDK 36, Q-25; hosting, Q-06) | ✅ Done | `claude/hopeful-brahmagupta-3cr7bc` | [#7](https://github.com/ArturCepowski/bookman/pull/7) |
+
+**Owner feedback 2026-10-29 (UI only, no new requirements):** Polish UI says "apartament" instead of "mieszkanie";
+the reservation screen menu offers *Details* for everyone and *Members*, *Cleaning reminders*, *Delete* for the
+ADMIN (moved from the details screen, which keeps *Edit*) – `ReservationListViewModelTest.REQ05_*`.
 
 Production runs on an Oracle Always Free VM (`docs/deployment.md`); releases go to the Google Play internal
 testing track. Before every Play upload raise `bookmanVersionCode` in `android/gradle.properties`.
